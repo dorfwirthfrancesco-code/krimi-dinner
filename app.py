@@ -292,47 +292,57 @@ def shop():
 def friends():
     uid   = session.get('user_id')
     token = session.get('access_token')
-    friends_list  = []
-    pending_in    = []  # requests I received
-    pending_out   = []  # requests I sent
+    friends_list   = []
+    pending_in     = []
+    pending_out    = []
     search_results = []
-    search_query  = request.args.get('q', '').strip()
-    msg = request.args.get('msg', '')
+    search_query   = request.args.get('q', '').strip()
+    msg            = request.args.get('msg', '')
 
     if SB_OK and uid != 'demo':
-        # Accepted friends
-        rows = sb_get('friendships',
-            f'user_id=eq.{uid}&status=eq.accepted&select=friend_id,profiles!friendships_friend_id_fkey(id,username)',
-            token) or []
-        friends_list = [{'id': r['profiles']['id'], 'name': r['profiles']['username']}
-                        for r in rows if r.get('profiles')]
+        # --- Accepted friends: get friend_ids, then fetch their profiles ---
+        accepted = sb_get('friendships',
+            f'user_id=eq.{uid}&status=eq.accepted&select=friend_id', token) or []
+        friend_ids = [r['friend_id'] for r in accepted]
+        if friend_ids:
+            id_list = ','.join(friend_ids)
+            profiles = sb_get('profiles', f'id=in.({id_list})&select=id,username', token) or []
+            friends_list = [{'id': p['id'], 'name': p['username']} for p in profiles]
 
-        # Incoming pending requests
+        # --- Incoming pending: someone sent ME a request ---
         rows_in = sb_get('friendships',
-            f'friend_id=eq.{uid}&status=eq.pending&select=id,user_id,profiles!friendships_user_id_fkey(id,username)',
-            token) or []
-        pending_in = [{'id': r['id'], 'user_id': r['user_id'], 'name': r['profiles']['username']}
-                      for r in rows_in if r.get('profiles')]
+            f'friend_id=eq.{uid}&status=eq.pending&select=id,user_id', token) or []
+        if rows_in:
+            sender_ids = [r['user_id'] for r in rows_in]
+            id_list2 = ','.join(sender_ids)
+            sender_profiles = sb_get('profiles', f'id=in.({id_list2})&select=id,username', token) or []
+            profile_map = {p['id']: p['username'] for p in sender_profiles}
+            pending_in = [{'id': r['id'], 'user_id': r['user_id'],
+                           'name': profile_map.get(r['user_id'], '?')} for r in rows_in]
 
-        # Outgoing pending requests
+        # --- Outgoing pending: I sent requests ---
         rows_out = sb_get('friendships',
-            f'user_id=eq.{uid}&status=eq.pending&select=id,friend_id,profiles!friendships_friend_id_fkey(username)',
-            token) or []
-        pending_out = [{'id': r['id'], 'name': r['profiles']['username']}
-                       for r in rows_out if r.get('profiles')]
+            f'user_id=eq.{uid}&status=eq.pending&select=id,friend_id', token) or []
+        if rows_out:
+            recv_ids = [r['friend_id'] for r in rows_out]
+            id_list3 = ','.join(recv_ids)
+            recv_profiles = sb_get('profiles', f'id=in.({id_list3})&select=id,username', token) or []
+            profile_map2 = {p['id']: p['username'] for p in recv_profiles}
+            pending_out = [{'id': r['id'], 'name': profile_map2.get(r['friend_id'], '?')}
+                           for r in rows_out]
 
-        # Search
+        # --- Search ---
         if search_query:
             results = sb_get('profiles',
                 f'username=ilike.*{search_query}*&select=id,username&limit=10', token) or []
-            # Filter out self and existing friends/pending
-            known_ids = {uid} | {f['id'] for f in friends_list} |                         {p['user_id'] for p in pending_in} |                         {r['friend_id'] for r in rows_out}
+            known_ids = {uid} | {f['id'] for f in friends_list} | \
+                        {p['user_id'] for p in pending_in} | \
+                        {r['friend_id'] for r in rows_out}
             search_results = [r for r in results if r['id'] not in known_ids]
 
     return render_template('friends.html',
         friends=friends_list, pending_in=pending_in, pending_out=pending_out,
         search_results=search_results, search_query=search_query, msg=msg)
-
 @app.route('/friends/add/<friend_id>')
 @login_required
 def friends_add(friend_id):
@@ -348,12 +358,16 @@ def friends_accept(friendship_id):
     uid   = session.get('user_id')
     token = session.get('access_token')
     if SB_OK and uid != 'demo':
-        sb_patch('friendships', f'id=eq.{friendship_id}&friend_id=eq.{uid}',
-                 {'status': 'accepted'}, token)
-        # Also create reverse friendship
-        rows = sb_get('friendships', f'id=eq.{friendship_id}&select=user_id', token) or []
-        if rows:
-            sb_post('friendships', {'user_id': uid, 'friend_id': rows[0]['user_id'], 'status': 'accepted'}, token)
+        # Get sender
+        rows = sb_get('friendships', f'id=eq.{friendship_id}&select=user_id,friend_id', token) or []
+        if rows and rows[0]['friend_id'] == uid:
+            sender_id = rows[0]['user_id']
+            # Accept original request
+            sb_patch('friendships', f'id=eq.{friendship_id}', {'status': 'accepted'}, token)
+            # Create reverse so both see each other as friends
+            sb_post('friendships', {
+                'user_id': uid, 'friend_id': sender_id, 'status': 'accepted'
+            }, token)
     return redirect(url_for('friends'))
 
 @app.route('/friends/decline/<friendship_id>')
@@ -362,11 +376,10 @@ def friends_decline(friendship_id):
     uid   = session.get('user_id')
     token = session.get('access_token')
     if SB_OK and uid != 'demo':
-        # Delete the request
-        url  = f'{SB_URL}/rest/v1/friendships?id=eq.{friendship_id}&friend_id=eq.{uid}'
-        req  = __import__('urllib.request', fromlist=['Request']).Request(
-            url, headers=sb_headers(token), method='DELETE')
-        try: __import__('urllib.request').urlopen(req, timeout=8)
+        import urllib.request as ur
+        url = f'{SB_URL}/rest/v1/friendships?id=eq.{friendship_id}'
+        req = ur.Request(url, headers=sb_headers(token), method='DELETE')
+        try: ur.urlopen(req, timeout=8)
         except: pass
     return redirect(url_for('friends'))
 
