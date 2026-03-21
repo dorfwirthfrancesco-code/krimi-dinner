@@ -18,6 +18,7 @@ load_env()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'krimi-dinner-dev-key-change-in-production')
+app.config['PERMANENT_SESSION_LIFETIME'] = __import__('datetime').timedelta(days=30)
 
 # ── Supabase Config ───────────────────────────────────────────────────────────
 SB_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
@@ -143,6 +144,9 @@ def login():
             session['access_token'] = res['access_token']
             p = get_profile(res['user']['id'], res['access_token'])
             session['username'] = p.get('username', email.split('@')[0])
+            remember = request.form.get('remember_me') == 'on'
+            if remember:
+                session.permanent = True
             return redirect(url_for('home'))
         except Exception as e:
             error = 'E-Mail oder Passwort falsch.'
@@ -286,21 +290,85 @@ def shop():
 @app.route('/friends')
 @login_required
 def friends():
-    friends_list = []
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    friends_list  = []
+    pending_in    = []  # requests I received
+    pending_out   = []  # requests I sent
+    search_results = []
+    search_query  = request.args.get('q', '').strip()
+    msg = request.args.get('msg', '')
+
+    if SB_OK and uid != 'demo':
+        # Accepted friends
+        rows = sb_get('friendships',
+            f'user_id=eq.{uid}&status=eq.accepted&select=friend_id,profiles!friendships_friend_id_fkey(id,username)',
+            token) or []
+        friends_list = [{'id': r['profiles']['id'], 'name': r['profiles']['username']}
+                        for r in rows if r.get('profiles')]
+
+        # Incoming pending requests
+        rows_in = sb_get('friendships',
+            f'friend_id=eq.{uid}&status=eq.pending&select=id,user_id,profiles!friendships_user_id_fkey(id,username)',
+            token) or []
+        pending_in = [{'id': r['id'], 'user_id': r['user_id'], 'name': r['profiles']['username']}
+                      for r in rows_in if r.get('profiles')]
+
+        # Outgoing pending requests
+        rows_out = sb_get('friendships',
+            f'user_id=eq.{uid}&status=eq.pending&select=id,friend_id,profiles!friendships_friend_id_fkey(username)',
+            token) or []
+        pending_out = [{'id': r['id'], 'name': r['profiles']['username']}
+                       for r in rows_out if r.get('profiles')]
+
+        # Search
+        if search_query:
+            results = sb_get('profiles',
+                f'username=ilike.*{search_query}*&select=id,username&limit=10', token) or []
+            # Filter out self and existing friends/pending
+            known_ids = {uid} | {f['id'] for f in friends_list} |                         {p['user_id'] for p in pending_in} |                         {r['friend_id'] for r in rows_out}
+            search_results = [r for r in results if r['id'] not in known_ids]
+
+    return render_template('friends.html',
+        friends=friends_list, pending_in=pending_in, pending_out=pending_out,
+        search_results=search_results, search_query=search_query, msg=msg)
+
+@app.route('/friends/add/<friend_id>')
+@login_required
+def friends_add(friend_id):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    if SB_OK and uid != 'demo' and uid != friend_id:
+        sb_post('friendships', {'user_id': uid, 'friend_id': friend_id, 'status': 'pending'}, token)
+    return redirect(url_for('friends', msg='sent'))
+
+@app.route('/friends/accept/<friendship_id>')
+@login_required
+def friends_accept(friendship_id):
     uid   = session.get('user_id')
     token = session.get('access_token')
     if SB_OK and uid != 'demo':
-        rows = sb_get('friendships',
-                      f'user_id=eq.{uid}&status=eq.accepted&select=profiles!friendships_friend_id_fkey(username)',
-                      token) or []
-        friends_list = [{'name': r['profiles']['username'], 'status': 'offline', 'games': 0}
-                        for r in rows if r.get('profiles')]
-    else:
-        friends_list = [
-            {'name': 'MaxMustermann', 'status': 'online',  'games': 12},
-            {'name': 'ElsaKrimi',     'status': 'playing', 'games': 27},
-        ]
-    return render_template('friends.html', friends=friends_list)
+        sb_patch('friendships', f'id=eq.{friendship_id}&friend_id=eq.{uid}',
+                 {'status': 'accepted'}, token)
+        # Also create reverse friendship
+        rows = sb_get('friendships', f'id=eq.{friendship_id}&select=user_id', token) or []
+        if rows:
+            sb_post('friendships', {'user_id': uid, 'friend_id': rows[0]['user_id'], 'status': 'accepted'}, token)
+    return redirect(url_for('friends'))
+
+@app.route('/friends/decline/<friendship_id>')
+@login_required
+def friends_decline(friendship_id):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    if SB_OK and uid != 'demo':
+        # Delete the request
+        url  = f'{SB_URL}/rest/v1/friendships?id=eq.{friendship_id}&friend_id=eq.{uid}'
+        req  = __import__('urllib.request', fromlist=['Request']).Request(
+            url, headers=sb_headers(token), method='DELETE')
+        try: __import__('urllib.request').urlopen(req, timeout=8)
+        except: pass
+    return redirect(url_for('friends'))
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
