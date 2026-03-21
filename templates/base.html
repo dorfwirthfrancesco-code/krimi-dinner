@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Krimi Dinner{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="page-wrap">
+
+  <nav class="top-nav">
+    <a href="/home" class="nav-brand">Krimi Dinner</a>
+    <div class="nav-links">
+      <a href="/home"     class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">Start</a>
+      <a href="/shop"     class="nav-link {% if request.endpoint == 'shop' %}active{% endif %}">Shop</a>
+      <a href="/friends"  class="nav-link {% if request.endpoint == 'friends' %}active{% endif %}">Freunde</a>
+      <a href="/profile"  class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">Profil</a>
+      <a href="/settings" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}">Einstellungen</a>
+      <a href="/logout" class="nav-link" style="margin-left:8px;">Abmelden</a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-items">
+    <a href="/home" class="bottom-nav-item {% if request.endpoint == 'home' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12L12 3l9 9M4 10v10h6v-5h4v5h6V10"/></svg>
+      Start
+    </a>
+    <a href="/shop" class="bottom-nav-item {% if request.endpoint == 'shop' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
+      Shop
+    </a>
+    <a href="/friends" class="bottom-nav-item {% if request.endpoint == 'friends' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Freunde
+    </a>
+    <a href="/profile" class="bottom-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil
+    </a>
+    <a href="/settings" class="bottom-nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Settings
+    </a>
+  </div>
+</nav>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

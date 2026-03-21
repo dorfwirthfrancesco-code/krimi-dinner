@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Shop – Krimi Dinner{% endblock %}
+{% block content %}
+<div class="page-header fade-up">
+  <div class="eyebrow">Fallarchiv</div>
+  <h1>Shop</h1>
+  <p>Erweitern Sie Ihre Sammlung mit neuen Szenarien.</p>
+</div>
+
+<div class="shop-grid">
+  {% for item in items %}
+  <div class="shop-item fade-up" style="animation-delay: {{ loop.index0 * 0.07 }}s">
+    <div class="shop-item-top">
+      <div>
+        <div class="shop-item-name">{{ item.name }}</div>
+        <div class="shop-item-genre">{{ item.genre }}</div>
+      </div>
+      {% if item.tag %}
+      <span class="tag {% if item.tag == 'Neu' %}tag-white{% endif %}">{{ item.tag }}</span>
+      {% endif %}
+    </div>
+
+    <div class="shop-item-meta">
+      <div class="shop-meta-item">
+        Spieler
+        <strong>{{ item.players }}</strong>
+      </div>
+      <div class="shop-meta-item">
+        Dauer
+        <strong>{{ item.duration }}</strong>
+      </div>
+    </div>
+
+    <div class="shop-price {% if item.owned %}shop-price-owned{% endif %}">
+      {% if item.owned %}Im Besitz{% else %}{{ item.price }} €{% endif %}
+    </div>
+
+    {% if item.owned %}
+    <button class="btn btn-sm btn-full" onclick="window.location='/home'">Spielen</button>
+    {% else %}
+    <button class="btn btn-primary btn-sm btn-full">Kaufen</button>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

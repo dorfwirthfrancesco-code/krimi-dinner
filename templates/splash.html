@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Martini Entertainment</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .splash-content {
+      text-align: center;
+      opacity: 0;
+      animation: appear 0.8s ease 0.4s forwards;
+    }
+
+    .splash-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: #fff;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+
+    .splash-sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 300;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* Fade out the whole page */
+    body.fade-out {
+      animation: fadeOut 0.7s ease forwards;
+    }
+
+    @keyframes appear {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="splash-content">
+    <div class="splash-logo">Martini Entertainment</div>
+    <div class="splash-sub">presents</div>
+  </div>
+
+  <script>
+    setTimeout(function() {
+      document.body.classList.add('fade-out');
+      setTimeout(function() {
+        window.location.href = '/prescreen';
+      }, 700);
+    }, 2200);
+  </script>
+</body>
+</html>

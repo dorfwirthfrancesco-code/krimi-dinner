@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Freunde – Krimi Dinner{% endblock %}
+{% block content %}
+<div class="page-header fade-up">
+  <div class="eyebrow">Sozial</div>
+  <h1>Freunde</h1>
+  <p>Ermitteln Sie gemeinsam mit anderen Spielern.</p>
+</div>
+
+<div style="display:flex; gap:8px; margin-bottom:32px;" class="fade-up delay-1">
+  <input type="text" placeholder="Nutzername suchen..." style="flex:1;">
+  <button class="btn btn-primary">Hinzufügen</button>
+</div>
+
+{% if friends %}
+<div class="card" style="padding: 0 24px;" class="fade-up delay-2">
+  {% for f in friends %}
+  <div class="friend-item">
+    <div class="friend-avatar">{{ f.name[0].upper() }}</div>
+    <div>
+      <div class="friend-name">{{ f.name }}</div>
+      <div class="friend-games">{{ f.games }} Spiele gespielt</div>
+    </div>
+    <div class="friend-status">
+      <span class="status-dot status-{{ f.status }}"></span>
+      <span class="status-label">
+        {% if f.status == 'online' %}Online
+        {% elif f.status == 'playing' %}Spielt gerade
+        {% else %}Offline{% endif %}
+      </span>
+    </div>
+    <button class="btn btn-sm" style="margin-left:12px;">Einladen</button>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div style="text-align:center; padding:48px; color:var(--grey-5); font-size:.9rem;">
+  Noch keine Freunde hinzugefügt.
+</div>
+{% endif %}
+
+<div class="card fade-up" style="margin-top:16px; text-align:center;">
+  <div style="font-size:.85rem; color:var(--grey-5); margin-bottom:14px;">
+    Freunde ohne Account einladen – einfach Spielcode teilen.
+  </div>
+  <a href="/create-game" class="btn btn-sm">Spiel erstellen</a>
+</div>
+{% endblock %}

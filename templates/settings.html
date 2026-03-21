@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Einstellungen – Krimi Dinner{% endblock %}
+{% block content %}
+<div class="page-header fade-up">
+  <div class="eyebrow">Konfiguration</div>
+  <h1>Einstellungen</h1>
+</div>
+
+<form method="POST">
+  <div class="card fade-up delay-1" style="margin-bottom:10px;">
+    <div style="font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:4px;">Audio</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Soundeffekte</div>
+        <div class="toggle-sub">Klänge bei Spielaktionen</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" name="sound" {% if settings.sound == 'on' %}checked{% endif %}>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Hintergrundmusik</div>
+        <div class="toggle-sub">Atmosphärische Begleitmusik</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" name="music" {% if settings.music == 'on' %}checked{% endif %}>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card fade-up delay-2" style="margin-bottom:10px;">
+    <div style="font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:4px;">Benachrichtigungen</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Push-Benachrichtigungen</div>
+        <div class="toggle-sub">Einladungen und Updates</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" name="notifications" {% if settings.notifications == 'on' %}checked{% endif %}>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card fade-up delay-3" style="margin-bottom:24px;">
+    <div style="font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:16px;">Sprache</div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label>Spielsprache</label>
+      <select name="language">
+        <option value="de" {% if settings.language=='de' %}selected{% endif %}>Deutsch</option>
+        <option value="at" {% if settings.language=='at' %}selected{% endif %}>Österreichisch</option>
+        <option value="en" {% if settings.language=='en' %}selected{% endif %}>English</option>
+      </select>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary fade-up delay-4">Speichern</button>
+</form>
+
+<div style="margin-top:48px; padding-top:24px; border-top:1px solid var(--grey-2); color:var(--grey-5); font-size:.75rem;">
+  Krimi Dinner · Version 0.1.0 · Martini Entertainment
+</div>
+{% endblock %}

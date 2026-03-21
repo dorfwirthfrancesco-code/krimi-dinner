@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Start – Krimi Dinner{% endblock %}
+{% block head %}
+<style>
+  .home-header { margin-bottom: 48px; }
+  .home-greeting {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--grey-5);
+    margin-bottom: 14px;
+  }
+  .online-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+  }
+  .home-title { margin-bottom: 6px; }
+  .home-sub { color: var(--grey-5); font-size: 0.9rem; }
+
+  /* Action grid */
+  .action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 48px;
+  }
+  .action-card {
+    display: flex; flex-direction: column;
+    padding: 22px 20px;
+    background: var(--grey-1);
+    border: 1px solid var(--grey-2);
+    border-radius: 8px;
+    text-decoration: none; color: inherit;
+    transition: border-color .2s, background .2s;
+    cursor: pointer;
+  }
+  .action-card:hover { border-color: var(--grey-4); background: var(--grey-2); }
+  .action-card.featured {
+    grid-column: 1 / -1;
+    flex-direction: row; align-items: center; gap: 20px;
+    padding: 26px 24px;
+    border-color: var(--grey-3);
+  }
+  .action-card.featured:hover { border-color: rgba(245,245,243,.3); }
+
+  .action-icon {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--grey-2); border: 1px solid var(--grey-3);
+    border-radius: 6px; margin-bottom: 14px;
+    flex-shrink: 0;
+  }
+  .action-card.featured .action-icon { margin-bottom: 0; }
+  .action-icon svg { width: 16px; height: 16px; stroke: var(--grey-6); }
+  .action-title { font-size: 0.9rem; font-weight: 500; color: var(--white); margin-bottom: 3px; }
+  .action-desc  { font-size: 0.78rem; color: var(--grey-5); line-height: 1.4; }
+  .action-arrow { margin-left: auto; color: var(--grey-4); flex-shrink: 0; }
+  .action-arrow svg { width: 16px; height: 16px; }
+
+  /* My games */
+  .game-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--grey-2);
+    text-decoration: none; color: inherit;
+    transition: opacity .15s;
+  }
+  .game-row:hover { opacity: 0.75; }
+  .game-row:last-child { border-bottom: none; }
+  .game-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--grey-3); flex-shrink: 0;
+  }
+  .game-dot.owned { background: var(--white); }
+  .game-name { font-size: 0.9rem; color: var(--white); }
+  .game-meta { font-size: 0.75rem; color: var(--grey-5); margin-top: 1px; }
+  .game-arrow { margin-left: auto; color: var(--grey-4); }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="home-header fade-up">
+  <div class="home-greeting">
+    <span class="online-dot"></span>
+    {{ username }}
+  </div>
+  <h1 class="home-title">Was möchten Sie<br>heute spielen?</h1>
+</div>
+
+<div class="action-grid">
+  <a href="/create-game" class="action-card featured fade-up delay-1">
+    <div class="action-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    </div>
+    <div>
+      <div class="action-title">Neues Spiel starten</div>
+      <div class="action-desc">Raum erstellen und Freunde mit einem Code einladen</div>
+    </div>
+    <span class="action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+  </a>
+
+  <a href="/join-game" class="action-card fade-up delay-2">
+    <div class="action-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+    </div>
+    <div class="action-title">Beitreten</div>
+    <div class="action-desc">Mit Code einloggen</div>
+  </a>
+
+  <a href="/shop" class="action-card fade-up delay-3">
+    <div class="action-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
+    </div>
+    <div class="action-title">Shop</div>
+    <div class="action-desc">Neue Fälle kaufen</div>
+  </a>
+</div>
+
+<div class="fade-up delay-4">
+  <div class="section-head">
+    <h2>Meine Fälle</h2>
+  </div>
+  <div class="card" style="padding: 0 24px;">
+    <a href="#" class="game-row">
+      <span class="game-dot owned"></span>
+      <div>
+        <div class="game-name">Mord im Orient-Express</div>
+        <div class="game-meta">Historisch · 5–10 Spieler · 75 Min</div>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+    <a href="/shop" class="game-row" style="opacity:.4;">
+      <span class="game-dot"></span>
+      <div>
+        <div class="game-name" style="color:var(--grey-5);">Weitere Fälle entdecken</div>
+      </div>
+      <span class="game-arrow">›</span>
+    </a>
+  </div>
+</div>
+
+{% endblock %}

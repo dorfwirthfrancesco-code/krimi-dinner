@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Anmeldung...</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: #0a0a0a; color: #f5f5f3;
+      font-family: 'DM Sans', sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; flex-direction: column; gap: 16px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 1px solid #333;
+      border-top-color: #f5f5f3;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    p { font-size: .85rem; color: #666; }
+    .error { color: #e74c3c; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <p id="msg">Anmeldung wird verarbeitet...</p>
+
+  <script>
+    async function handleCallback() {
+      // Supabase returns token in URL hash: #access_token=...&...
+      const hash   = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+
+      if (!accessToken) {
+        // Check query params too
+        const qp = new URLSearchParams(window.location.search);
+        const code = qp.get('code');
+        if (code) {
+          // Some Supabase versions use PKCE with code
+          document.getElementById('msg').textContent = 'Code wird verarbeitet...';
+        } else {
+          document.getElementById('msg').className = 'error';
+          document.getElementById('msg').textContent = 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.';
+          setTimeout(() => window.location.href = '/login', 2500);
+          return;
+        }
+      }
+
+      // Fetch user info from Supabase
+      try {
+        const sbUrl = '{{ sb_url }}';
+        const sbKey = '{{ sb_key }}';
+
+        const userRes = await fetch(`${sbUrl}/auth/v1/user`, {
+          headers: {
+            'apikey': sbKey,
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+        const user = await userRes.json();
+        const uid      = user.id;
+        const email    = user.email || '';
+        const meta     = user.user_metadata || {};
+        const username = meta.full_name || meta.name || meta.username || email.split('@')[0];
+
+        // Send to Flask session
+        await fetch('/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: accessToken, user_id: uid, username: username })
+        });
+
+        window.location.href = '/home';
+      } catch(e) {
+        document.getElementById('msg').className = 'error';
+        document.getElementById('msg').textContent = 'Fehler bei der Anmeldung.';
+        setTimeout(() => window.location.href = '/login', 2500);
+      }
+    }
+
+    handleCallback();
+  </script>
+</body>
+</html>

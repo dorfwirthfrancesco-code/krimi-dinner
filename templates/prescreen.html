@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Krimi Dinner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; overflow: hidden;
+    }
+    .prescreen {
+      max-width: 480px; width: 90%;
+      text-align: center;
+      padding: 40px 0;
+    }
+    .pre-eyebrow {
+      font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--grey-5); margin-bottom: 20px;
+      opacity: 0; animation: fadeUp .5s ease .2s forwards;
+    }
+    .pre-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(3rem, 10vw, 4.8rem);
+      font-weight: 400; line-height: 1.05;
+      color: var(--white); margin-bottom: 6px;
+      opacity: 0; animation: fadeUp .6s ease .4s forwards;
+    }
+    .pre-title-sub {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1rem, 3vw, 1.3rem);
+      color: var(--grey-5); font-style: italic;
+      margin-bottom: 32px;
+      opacity: 0; animation: fadeUp .5s ease .6s forwards;
+    }
+    .pre-desc {
+      font-size: 0.9rem; color: var(--grey-5); line-height: 1.7;
+      margin-bottom: 40px;
+      opacity: 0; animation: fadeUp .5s ease .8s forwards;
+    }
+    .pre-info {
+      display: flex; justify-content: center; gap: 32px;
+      margin-bottom: 40px;
+      opacity: 0; animation: fadeUp .5s ease 1s forwards;
+    }
+    .pre-info-item { text-align: center; }
+    .pre-info-value { font-size: 1.1rem; font-weight: 500; color: var(--white); }
+    .pre-info-label {
+      font-size: 0.62rem; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--grey-5); margin-top: 2px;
+    }
+    .pre-cta {
+      opacity: 0; animation: fadeUp .5s ease 1.2s forwards;
+    }
+    .divider-dot {
+      display: inline-block; width: 1px; height: 24px;
+      background: var(--grey-3); vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="prescreen">
+    <div class="pre-eyebrow">Martini Entertainment</div>
+    <h1 class="pre-title">Krimi<br>Dinner</h1>
+    <div class="pre-title-sub">Das interaktive Mordspiel</div>
+    <p class="pre-desc">
+      Eine Nacht. Ein Mord. Sechs Verdächtige.<br>
+      Wer von euch ist der Täter?
+    </p>
+    <div class="pre-info">
+      <div class="pre-info-item">
+        <div class="pre-info-value">3–10</div>
+        <div class="pre-info-label">Spieler</div>
+      </div>
+      <div class="pre-info-item">
+        <div class="pre-info-value">60–90</div>
+        <div class="pre-info-label">Minuten</div>
+      </div>
+      <div class="pre-info-item">
+        <div class="pre-info-value">ab 14</div>
+        <div class="pre-info-label">Jahren</div>
+      </div>
+    </div>
+    <div class="pre-cta">
+      <a href="/home" class="btn btn-primary" style="padding: 13px 40px; font-size: 0.82rem;">
+        Eintreten
+      </a>
+    </div>
+  </div>
+</body>
+</html>
