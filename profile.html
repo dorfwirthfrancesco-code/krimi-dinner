@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ t.profile_title }} – Krimi Dinner{% block scripts %}
+{% block title %}{{ t.profile_title }} – Krimi Dinner{% endblock %}
+{% block scripts %}
 <script>
 document.querySelectorAll('input[name="avatar"]').forEach(inp => {
   const box = inp.nextElementSibling;
