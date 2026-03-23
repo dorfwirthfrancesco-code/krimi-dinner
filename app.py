@@ -346,7 +346,9 @@ def profile():
         if SB_OK and uid != 'demo':
             update = {'genre': genre, 'lang': lang}
             if uname: update['username'] = uname
-            if avatar.isdigit(): update['avatar_id'] = int(avatar)
+            try:
+                if avatar and avatar.isdigit(): update['avatar_id'] = int(avatar)
+            except: pass
             sb_patch('profiles', f'id=eq.{uid}', update, token)
         return redirect(url_for('profile'))
     p     = get_profile(uid, token)
