@@ -1,44 +1,32 @@
 {% extends "base.html" %}
-{% block title %}Shop – Krimi Dinner{% endblock %}
+{% block title %}{{ t.shop_title }} – Krimi Dinner{% endblock %}
 {% block content %}
 <div class="page-header fade-up">
-  <div class="eyebrow">Fallarchiv</div>
-  <h1>Shop</h1>
-  <p>Erweitern Sie Ihre Sammlung mit neuen Szenarien.</p>
+  <div class="eyebrow">{{ t.shop_eyebrow }}</div>
+  <h1>{{ t.shop_title }}</h1>
+  <p>{{ t.shop_sub }}</p>
 </div>
-
 <div class="shop-grid">
   {% for item in items %}
-  <div class="shop-item fade-up" style="animation-delay: {{ loop.index0 * 0.07 }}s">
+  <div class="shop-item fade-up" style="animation-delay:{{ loop.index0 * 0.07 }}s">
     <div class="shop-item-top">
       <div>
         <div class="shop-item-name">{{ item.name }}</div>
         <div class="shop-item-genre">{{ item.genre }}</div>
       </div>
-      {% if item.tag %}
-      <span class="tag {% if item.tag == 'Neu' %}tag-white{% endif %}">{{ item.tag }}</span>
-      {% endif %}
+      {% if item.tag %}<span class="tag {% if item.tag=='New' or item.tag=='Neu' %}tag-white{% endif %}">{{ item.tag }}</span>{% endif %}
     </div>
-
     <div class="shop-item-meta">
-      <div class="shop-meta-item">
-        Spieler
-        <strong>{{ item.players }}</strong>
-      </div>
-      <div class="shop-meta-item">
-        Dauer
-        <strong>{{ item.duration }}</strong>
-      </div>
+      <div class="shop-meta-item">{{ t.shop_players }}<strong>{{ item.players }}</strong></div>
+      <div class="shop-meta-item">{{ t.shop_duration }}<strong>{{ item.duration }}</strong></div>
     </div>
-
     <div class="shop-price {% if item.owned %}shop-price-owned{% endif %}">
-      {% if item.owned %}Im Besitz{% else %}{{ item.price }} €{% endif %}
+      {% if item.owned %}{{ t.shop_owned }}{% else %}{{ item.price }} €{% endif %}
     </div>
-
     {% if item.owned %}
-    <button class="btn btn-sm btn-full" onclick="window.location='/home'">Spielen</button>
+    <button class="btn btn-sm btn-full" onclick="window.location='/home'">{{ t.shop_play }}</button>
     {% else %}
-    <button class="btn btn-primary btn-sm btn-full">Kaufen</button>
+    <button class="btn btn-primary btn-sm btn-full">{{ t.shop_buy }}</button>
     {% endif %}
   </div>
   {% endfor %}

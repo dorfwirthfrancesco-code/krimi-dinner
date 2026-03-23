@@ -1,94 +1,69 @@
 {% extends "base.html" %}
-{% block title %}Freunde – Krimi Dinner{% endblock %}
+{% block title %}{{ t.friends_title }} – Krimi Dinner{% endblock %}
 {% block head %}
 <style>
-  .friends-section-title {
-    font-size:.68rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--grey-5); margin-bottom:12px; margin-top:32px;
-  }
-  .friends-section-title:first-child { margin-top:0; }
-  .friend-item {
-    display:flex; align-items:center; gap:14px;
-    padding:14px 0; border-bottom:1px solid var(--grey-2);
-  }
+  .sec-title { font-size:.68rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--grey-5); margin-bottom:12px; margin-top:32px; }
+  .sec-title:first-child { margin-top:0; }
+  .friend-item { display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid var(--grey-2); }
   .friend-item:last-child { border-bottom:none; }
-  .friend-avatar {
-    width:38px; height:38px; border-radius:50%;
-    background:var(--grey-2); border:1px solid var(--grey-3);
-    display:flex; align-items:center; justify-content:center;
-    font-size:.9rem; font-weight:500; color:var(--white); flex-shrink:0;
-  }
-  .friend-name { font-size:.9rem; color:var(--white); }
-  .friend-sub  { font-size:.72rem; color:var(--grey-5); margin-top:1px; }
-  .empty-state {
-    text-align:center; padding:32px;
-    font-size:.85rem; color:var(--grey-5); font-style:italic;
-  }
-  .msg-banner {
-    padding:10px 14px; border-radius:6px; margin-bottom:20px;
-    background:rgba(39,174,96,.1); border:1px solid rgba(39,174,96,.25);
-    font-size:.8rem; color:#27ae60;
-  }
-  .pending-badge {
-    display:inline-flex; align-items:center; justify-content:center;
-    width:18px; height:18px; border-radius:50%;
-    background:var(--white); color:var(--black);
-    font-size:.6rem; font-weight:700; margin-left:6px;
-  }
+  .friend-avatar { width:38px; height:38px; border-radius:50%; background:var(--grey-2); border:1px solid var(--grey-3); display:flex; align-items:center; justify-content:center; font-size:.9rem; font-weight:500; color:var(--white); flex-shrink:0; text-decoration:none; transition:border-color .2s; }
+  .friend-avatar:hover { border-color:var(--grey-5); }
+  .friend-name { font-size:.9rem; color:var(--white); text-decoration:none; }
+  .friend-name:hover { text-decoration:underline; }
+  .empty-state { text-align:center; padding:32px; font-size:.85rem; color:var(--grey-5); font-style:italic; }
+  .msg-banner { padding:10px 14px; border-radius:6px; margin-bottom:20px; background:rgba(39,174,96,.1); border:1px solid rgba(39,174,96,.25); font-size:.8rem; color:#27ae60; }
+  .pending-badge { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:var(--white); color:var(--black); font-size:.6rem; font-weight:700; margin-left:6px; }
 </style>
 {% endblock %}
 {% block content %}
-
 <div class="page-header fade-up">
-  <div class="eyebrow">Sozial</div>
-  <h1>Freunde{% if pending_in %}<span class="pending-badge">{{ pending_in|length }}</span>{% endif %}</h1>
+  <div class="eyebrow">Social</div>
+  <h1>{{ t.friends_title }}{% if pending_in %}<span class="pending-badge">{{ pending_in|length }}</span>{% endif %}</h1>
 </div>
 
-{% if msg == 'sent' %}
-<div class="msg-banner fade-up">Freundschaftsanfrage gesendet.</div>
-{% endif %}
+{% if msg == 'sent' %}<div class="msg-banner fade-up">{{ t.friends_sent }}</div>{% endif %}
 
-<!-- Suche -->
+<!-- Search -->
 <form method="GET" action="/friends" class="fade-up" style="display:flex;gap:8px;margin-bottom:32px;">
-  <input type="text" name="q" value="{{ search_query }}" placeholder="Nutzername suchen..." style="flex:1;">
-  <button type="submit" class="btn btn-primary">Suchen</button>
+  <input type="text" name="q" value="{{ search_query }}" placeholder="{{ t.friends_search_ph }}" style="flex:1;">
+  <button type="submit" class="btn btn-primary">{{ t.friends_search_btn }}</button>
 </form>
 
-<!-- Suchergebnisse -->
+<!-- Search results -->
 {% if search_query %}
 <div class="fade-up">
-  <div class="friends-section-title">Ergebnisse für "{{ search_query }}"</div>
+  <div class="sec-title">{{ t.friends_results }} "{{ search_query }}"</div>
   {% if search_results %}
   <div class="card" style="padding:0 24px;">
     {% for u in search_results %}
     <div class="friend-item">
-      <div class="friend-avatar">{{ u.username[0].upper() }}</div>
-      <div style="flex:1;"><div class="friend-name">{{ u.username }}</div></div>
-      <a href="/friends/add/{{ u.id }}" class="btn btn-primary btn-sm">Hinzufügen</a>
+      <a href="/friends/profile/{{ u.id }}" class="friend-avatar">{{ u.username[0].upper() }}</a>
+      <div style="flex:1;"><a href="/friends/profile/{{ u.id }}" class="friend-name">{{ u.username }}</a></div>
+      <a href="/friends/add/{{ u.id }}" class="btn btn-primary btn-sm">{{ t.friends_add }}</a>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <div class="empty-state">Keine Nutzer gefunden.</div>
+  <div class="empty-state">{{ t.friends_no_results }}</div>
   {% endif %}
 </div>
 {% endif %}
 
-<!-- Eingehende Anfragen -->
+<!-- Incoming requests -->
 {% if pending_in %}
 <div class="fade-up">
-  <div class="friends-section-title">Anfragen erhalten ({{ pending_in|length }})</div>
+  <div class="sec-title">{{ t.friends_requests_in }} ({{ pending_in|length }})</div>
   <div class="card" style="padding:0 24px;">
     {% for p in pending_in %}
     <div class="friend-item">
-      <div class="friend-avatar">{{ p.name[0].upper() }}</div>
+      <a href="/friends/profile/{{ p.user_id }}" class="friend-avatar">{{ p.name[0].upper() }}</a>
       <div style="flex:1;">
-        <div class="friend-name">{{ p.name }}</div>
-        <div class="friend-sub">Möchte mit dir befreundet sein</div>
+        <a href="/friends/profile/{{ p.user_id }}" class="friend-name">{{ p.name }}</a>
+        <div style="font-size:.72rem;color:var(--grey-5);margin-top:1px;">{{ t.friends_wants }}</div>
       </div>
       <div style="display:flex;gap:8px;">
-        <a href="/friends/accept/{{ p.id }}" class="btn btn-primary btn-sm">Annehmen</a>
-        <a href="/friends/decline/{{ p.id }}" class="btn btn-sm">Ablehnen</a>
+        <a href="/friends/accept/{{ p.id }}" class="btn btn-primary btn-sm">{{ t.friends_accept }}</a>
+        <a href="/friends/decline/{{ p.id }}" class="btn btn-sm">{{ t.friends_decline }}</a>
       </div>
     </div>
     {% endfor %}
@@ -96,41 +71,39 @@
 </div>
 {% endif %}
 
-<!-- Gesendete Anfragen -->
+<!-- Outgoing pending -->
 {% if pending_out %}
 <div class="fade-up">
-  <div class="friends-section-title">Gesendete Anfragen</div>
+  <div class="sec-title">{{ t.friends_requests_out }}</div>
   <div class="card" style="padding:0 24px;">
     {% for p in pending_out %}
     <div class="friend-item">
       <div class="friend-avatar" style="opacity:.4;">{{ p.name[0].upper() }}</div>
-      <div style="flex:1;">
-        <div class="friend-name" style="color:var(--grey-5);">{{ p.name }}</div>
-        <div class="friend-sub">Anfrage ausstehend</div>
-      </div>
-      <span class="tag">Ausstehend</span>
+      <div style="flex:1;"><div style="font-size:.9rem;color:var(--grey-5);">{{ p.name }}</div></div>
+      <span class="tag">{{ t.friends_pending }}</span>
     </div>
     {% endfor %}
   </div>
 </div>
 {% endif %}
 
-<!-- Freundesliste -->
+<!-- Friends list - click for profile -->
 <div class="fade-up">
-  <div class="friends-section-title">Meine Freunde ({{ friends|length }})</div>
+  <div class="sec-title">{{ t.friends_my }} ({{ friends|length }})</div>
   {% if friends %}
   <div class="card" style="padding:0 24px;">
     {% for f in friends %}
     <div class="friend-item">
-      <div class="friend-avatar">{{ f.name[0].upper() }}</div>
-      <div style="flex:1;"><div class="friend-name">{{ f.name }}</div></div>
-      <button class="btn btn-sm">Einladen</button>
+      <a href="/friends/profile/{{ f.id }}" class="friend-avatar">{{ f.name[0].upper() }}</a>
+      <div style="flex:1;">
+        <a href="/friends/profile/{{ f.id }}" class="friend-name">{{ f.name }}</a>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--grey-4);"><path d="M9 18l6-6-6-6"/></svg>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <div class="empty-state">Noch keine Freunde. Suche nach Nutzernamen oben!</div>
+  <div class="empty-state">{{ t.friends_empty }}</div>
   {% endif %}
 </div>
-
 {% endblock %}

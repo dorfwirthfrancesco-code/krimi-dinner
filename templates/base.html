@@ -1,59 +1,166 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Krimi Dinner{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    /* ── Notification banner ── */
+    #notif-container {
+      position: fixed; top: 70px; right: 16px;
+      z-index: 9000; display: flex; flex-direction: column; gap: 10px;
+      max-width: 340px; width: calc(100vw - 32px);
+    }
+    .notif-card {
+      background: #1a1a1a; border: 1px solid #333;
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; gap: 12px; align-items: flex-start;
+      box-shadow: 0 8px 32px rgba(0,0,0,.6);
+      animation: slideIn .3s ease;
+    }
+    .notif-card.hiding { animation: slideOut .3s ease forwards; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes slideOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(40px); } }
+    .notif-icon { font-size: 1.2rem; flex-shrink:0; margin-top:1px; }
+    .notif-body { flex:1; }
+    .notif-text { font-size:.85rem; color:#f5f5f3; line-height:1.4; margin-bottom:10px; }
+    .notif-text strong { color:#fff; }
+    .notif-actions { display:flex; gap:8px; }
+    .notif-btn {
+      font-family:'DM Sans',sans-serif; font-size:.72rem; font-weight:500;
+      padding:6px 14px; border-radius:5px; cursor:pointer; border:none;
+      transition: opacity .15s;
+    }
+    .notif-btn:hover { opacity:.85; }
+    .notif-btn-accept { background:#f5f5f3; color:#0a0a0a; }
+    .notif-btn-decline { background:#242424; color:#888; }
+    .notif-progress {
+      position:absolute; bottom:0; left:0; height:2px;
+      background:#555; border-radius:0 0 10px 10px;
+      animation: progress 8s linear forwards;
+    }
+    @keyframes progress { from{width:100%} to{width:0%} }
+    .notif-card { position:relative; overflow:hidden; }
+  </style>
   {% block head %}{% endblock %}
 </head>
 <body>
-<div class="page-wrap">
 
+<!-- Notification container -->
+<div id="notif-container"></div>
+
+<div class="page-wrap">
   <nav class="top-nav">
     <a href="/home" class="nav-brand">Krimi Dinner</a>
     <div class="nav-links">
-      <a href="/home"     class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">Start</a>
-      <a href="/shop"     class="nav-link {% if request.endpoint == 'shop' %}active{% endif %}">Shop</a>
-      <a href="/friends"  class="nav-link {% if request.endpoint == 'friends' %}active{% endif %}">Freunde</a>
-      <a href="/profile"  class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">Profil</a>
-      <a href="/settings" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}">Einstellungen</a>
-      <a href="/logout" class="nav-link" style="margin-left:8px;">Abmelden</a>
+      <a href="/home"     class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">{{ t.nav_home }}</a>
+      <a href="/shop"     class="nav-link {% if request.endpoint == 'shop' %}active{% endif %}">{{ t.nav_shop }}</a>
+      <a href="/friends"  class="nav-link {% if request.endpoint == 'friends' %}active{% endif %}">{{ t.nav_friends }}</a>
+      <a href="/profile"  class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">{{ t.nav_profile }}</a>
+      <a href="/settings" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}">{{ t.nav_settings }}</a>
+      <a href="/logout"   class="nav-link" style="margin-left:8px;">{{ t.nav_logout }}</a>
     </div>
   </nav>
 
   <main class="main-content">
     {% block content %}{% endblock %}
   </main>
-
 </div>
 
 <nav class="bottom-nav">
   <div class="bottom-nav-items">
     <a href="/home" class="bottom-nav-item {% if request.endpoint == 'home' %}active{% endif %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12L12 3l9 9M4 10v10h6v-5h4v5h6V10"/></svg>
-      Start
+      {{ t.nav_home }}
     </a>
     <a href="/shop" class="bottom-nav-item {% if request.endpoint == 'shop' %}active{% endif %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
-      Shop
+      {{ t.nav_shop }}
     </a>
     <a href="/friends" class="bottom-nav-item {% if request.endpoint == 'friends' %}active{% endif %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      Freunde
+      {{ t.nav_friends }}
     </a>
     <a href="/profile" class="bottom-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Profil
+      {{ t.nav_profile }}
     </a>
     <a href="/settings" class="bottom-nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      Settings
+      {{ t.nav_settings }}
     </a>
   </div>
 </nav>
 
-{% block scripts %}{% endblock %}
 <script src="{{ url_for('static', filename='js/sounds.js') }}"></script>
+
+<!-- Notification polling system -->
+<script>
+const T_INVITED  = {{ t.notif_invited | tojson }};
+const T_ACCEPT   = {{ t.notif_accept  | tojson }};
+const T_DECLINE  = {{ t.notif_decline | tojson }};
+
+const shownInvites = new Set();
+
+function showInviteNotif(invite) {
+  if (shownInvites.has(invite.id)) return;
+  shownInvites.add(invite.id);
+
+  const card = document.createElement('div');
+  card.className = 'notif-card';
+  card.innerHTML = `
+    <div class="notif-icon">🎭</div>
+    <div class="notif-body">
+      <div class="notif-text"><strong>${invite.from}</strong> ${T_INVITED}</div>
+      <div class="notif-actions">
+        <button class="notif-btn notif-btn-accept" onclick="acceptInvite('${invite.id}','${invite.code}',this)">${T_ACCEPT}</button>
+        <button class="notif-btn notif-btn-decline" onclick="declineInvite('${invite.id}',this)">${T_DECLINE}</button>
+      </div>
+    </div>
+    <div class="notif-progress"></div>
+  `;
+  document.getElementById('notif-container').appendChild(card);
+  try { KrimiSound.playClick(); } catch(e) {}
+
+  // Auto-dismiss after 8s
+  setTimeout(() => dismissNotif(card), 8000);
+}
+
+function dismissNotif(card) {
+  card.classList.add('hiding');
+  setTimeout(() => card.remove(), 300);
+}
+
+async function acceptInvite(id, code, btn) {
+  btn.disabled = true;
+  const res = await fetch(`/api/invites/${id}/accept`, {method:'POST'});
+  const data = await res.json();
+  if (data.ok && data.code) {
+    window.location.href = `/lobby/${data.code}`;
+  }
+  dismissNotif(btn.closest('.notif-card'));
+}
+
+async function declineInvite(id, btn) {
+  btn.disabled = true;
+  await fetch(`/api/invites/${id}/decline`, {method:'POST'});
+  dismissNotif(btn.closest('.notif-card'));
+}
+
+async function pollInvites() {
+  try {
+    const res  = await fetch('/api/invites');
+    const data = await res.json();
+    (data.invites || []).forEach(showInviteNotif);
+  } catch(e) {}
+  setTimeout(pollInvites, 5000);
+}
+
+// Start polling
+setTimeout(pollInvites, 3000);
+</script>
+
+{% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,41 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Beitreten{% endblock %}
+{% block title %}{{ t.join_title }} – Krimi Dinner{% endblock %}
 {% block head %}
 <style>
-  .join-wrap { max-width: 380px; margin: 0 auto; }
-  .code-field {
-    font-family: 'DM Serif Display', serif !important;
-    font-size: 2rem !important;
-    letter-spacing: 0.5em !important;
-    text-align: center !important;
-    text-transform: uppercase !important;
-  }
+  .join-wrap { max-width:380px; margin:0 auto; }
+  .code-field { font-family:'DM Serif Display',serif !important; font-size:2rem !important; letter-spacing:.5em !important; text-align:center !important; text-transform:uppercase !important; }
 </style>
 {% endblock %}
 {% block content %}
 <div class="page-header fade-up">
-  <div class="eyebrow">Spiel beitreten</div>
-  <h1>Code eingeben</h1>
-  <p>Geben Sie den 6-stelligen Code Ihres Gastgebers ein.</p>
+  <div class="eyebrow">{{ t.join_eyebrow }}</div>
+  <h1>{{ t.join_title }}</h1>
+  <p>{{ t.join_sub }}</p>
 </div>
-
 <div class="join-wrap">
   <form method="POST">
     <div class="form-group fade-up delay-1">
-      <label>Einladungscode</label>
-      <input class="code-field" type="text" name="code" maxlength="6"
-             placeholder="· · · · · ·" autocomplete="off" autofocus>
-      {% if error %}
-      <div class="error-message">{{ error }}</div>
-      {% endif %}
+      <label>{{ t.join_label }}</label>
+      <input class="code-field" type="text" name="code" maxlength="6" placeholder="· · · · · ·" autocomplete="off" autofocus>
+      {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
     </div>
-    <button type="submit" class="btn btn-primary btn-full fade-up delay-2">
-      Beitreten
-    </button>
+    <button type="submit" class="btn btn-primary btn-full fade-up delay-2">{{ t.join_btn }}</button>
   </form>
-
-  <div style="margin-top: 16px; text-align: center;">
-    <a href="/home" class="btn btn-ghost btn-sm">Abbrechen</a>
+  <div style="margin-top:16px;text-align:center;">
+    <a href="/home" class="btn btn-ghost btn-sm">{{ t.join_cancel }}</a>
   </div>
 </div>
 {% endblock %}

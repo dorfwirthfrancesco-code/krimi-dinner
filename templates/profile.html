@@ -1,75 +1,75 @@
 {% extends "base.html" %}
-{% block title %}Profil – Krimi Dinner{% endblock %}
+{% block title %}{{ t.profile_title }} – Krimi Dinner{% endblock %}
 {% block content %}
 <div class="page-header fade-up">
-  <div class="eyebrow">Ihr Dossier</div>
-  <h1>Profil</h1>
+  <div class="eyebrow">{{ t.profile_eyebrow }}</div>
+  <h1>{{ t.profile_title }}</h1>
 </div>
 
-<div class="avatar-block fade-up delay-1">
-  <div class="avatar-circle">{{ username[0].upper() }}</div>
-  <div class="avatar-name">{{ username }}</div>
-  <div class="avatar-role">Detektiv · Rang 3</div>
+<div style="margin-bottom:32px;" class="fade-up delay-1">
+  <div style="width:72px;height:72px;border-radius:50%;background:var(--grey-2);border:1px solid var(--grey-3);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--white);margin-bottom:12px;">{{ username[0].upper() }}</div>
+  <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:2px;">{{ username }}</div>
+  <div style="font-size:.75rem;color:var(--grey-5);letter-spacing:.06em;text-transform:uppercase;">{{ t.profile_rank }} {{ profile.rank or 1 }}</div>
 </div>
 
 <div class="stats-grid fade-up delay-2">
-  <div class="stat-cell">
-    <div class="stat-number">{{ stats.games }}</div>
-    <div class="stat-label">Gespielt</div>
-  </div>
-  <div class="stat-cell">
-    <div class="stat-number">{{ stats.wins }}</div>
-    <div class="stat-label">Gewonnen</div>
-  </div>
-  <div class="stat-cell">
-    <div class="stat-number">{{ stats.murderer }}</div>
-    <div class="stat-label">Als Mörder</div>
-  </div>
-  <div class="stat-cell">
-    <div class="stat-number">{{ stats.solved }}</div>
-    <div class="stat-label">Gelöst</div>
-  </div>
+  <div class="stat-cell"><div class="stat-number">{{ stats.games }}</div><div class="stat-label">{{ t.profile_games }}</div></div>
+  <div class="stat-cell"><div class="stat-number">{{ stats.wins }}</div><div class="stat-label">{{ t.profile_wins }}</div></div>
+  <div class="stat-cell"><div class="stat-number">{{ stats.murderer }}</div><div class="stat-label">{{ t.profile_murderer }}</div></div>
+  <div class="stat-cell"><div class="stat-number">{{ stats.solved }}</div><div class="stat-label">{{ t.profile_solved }}</div></div>
 </div>
 
 <div class="card fade-up delay-3" style="margin-bottom:16px;">
-  <div style="font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:18px;">Profil bearbeiten</div>
+  <div style="font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-5);margin-bottom:18px;">{{ t.profile_edit }}</div>
   <form method="POST">
     <div class="form-group">
-      <label>Anzeigename</label>
+      <label>{{ t.profile_name }}</label>
       <input type="text" name="username" value="{{ username }}" maxlength="20">
     </div>
     <div class="form-group">
-      <label>Lieblings-Genre</label>
+      <label>{{ t.profile_genre }}</label>
       <select name="genre">
-        <option>Klassischer Krimi</option>
-        <option>Cozy Mystery</option>
-        <option>Hardboiled Noir</option>
-        <option>Gothic Horror</option>
-        <option>Historisch</option>
+        <option value="classic" {% if profile.genre=='classic' %}selected{% endif %}>{{ t.genre_classic }}</option>
+        <option value="cozy"    {% if profile.genre=='cozy' %}selected{% endif %}>{{ t.genre_cozy }}</option>
+        <option value="hardboiled" {% if profile.genre=='hardboiled' %}selected{% endif %}>{{ t.genre_hardboiled }}</option>
+        <option value="gothic"  {% if profile.genre=='gothic' %}selected{% endif %}>{{ t.genre_gothic }}</option>
+        <option value="historical" {% if profile.genre=='historical' %}selected{% endif %}>{{ t.genre_historical }}</option>
+        <option value="comedy"  {% if profile.genre=='comedy' %}selected{% endif %}>{{ t.genre_comedy }}</option>
       </select>
     </div>
-    <button type="submit" class="btn btn-primary">Speichern</button>
+    <div class="form-group">
+      <label>{{ t.settings_lang_label }}</label>
+      <select name="lang">
+        <option value="en" {% if lang=='en' %}selected{% endif %}>🇬🇧 English</option>
+        <option value="de" {% if lang=='de' %}selected{% endif %}>🇩🇪 Deutsch</option>
+        <option value="fr" {% if lang=='fr' %}selected{% endif %}>🇫🇷 Français</option>
+        <option value="it" {% if lang=='it' %}selected{% endif %}>🇮🇹 Italiano</option>
+        <option value="es" {% if lang=='es' %}selected{% endif %}>🇪🇸 Español</option>
+        <option value="pt" {% if lang=='pt' %}selected{% endif %}>🇵🇹 Português</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ t.profile_save }}</button>
   </form>
 </div>
 
 <div class="card fade-up delay-4">
-  <div style="font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:18px;">Abzeichen</div>
+  <div style="font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-5);margin-bottom:18px;">{{ t.profile_badges }}</div>
   <div class="achievement-grid">
-    <div class="achievement-item">
-      <div class="achievement-title">Erster Fall</div>
-      <div class="achievement-desc">1 Spiel beendet</div>
+    <div class="achievement-item {% if stats.games < 1 %}locked{% endif %}">
+      <div class="achievement-title">{{ t.profile_badge1_name }}</div>
+      <div class="achievement-desc">{{ t.profile_badge1_desc }}</div>
     </div>
-    <div class="achievement-item">
-      <div class="achievement-title">Perfekter Mörder</div>
-      <div class="achievement-desc">Als Täter gewonnen</div>
+    <div class="achievement-item {% if stats.murderer < 1 %}locked{% endif %}">
+      <div class="achievement-title">{{ t.profile_badge2_name }}</div>
+      <div class="achievement-desc">{{ t.profile_badge2_desc }}</div>
     </div>
-    <div class="achievement-item locked">
-      <div class="achievement-title">Meisterdetektiv</div>
-      <div class="achievement-desc">10 Fälle gelöst</div>
+    <div class="achievement-item {% if stats.solved < 10 %}locked{% endif %}">
+      <div class="achievement-title">{{ t.profile_badge3_name }}</div>
+      <div class="achievement-desc">{{ t.profile_badge3_desc }}</div>
     </div>
-    <div class="achievement-item locked">
-      <div class="achievement-title">Stammgast</div>
-      <div class="achievement-desc">20 Spiele gespielt</div>
+    <div class="achievement-item {% if stats.games < 20 %}locked{% endif %}">
+      <div class="achievement-title">{{ t.profile_badge4_name }}</div>
+      <div class="achievement-desc">{{ t.profile_badge4_desc }}</div>
     </div>
   </div>
 </div>

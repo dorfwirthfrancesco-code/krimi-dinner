@@ -1,84 +1,62 @@
 {% extends "base.html" %}
-{% block title %}Einstellungen – Krimi Dinner{% endblock %}
+{% block title %}{{ t.settings_title }} – Krimi Dinner{% endblock %}
 {% block content %}
 <div class="page-header fade-up">
-  <div class="eyebrow">Konfiguration</div>
-  <h1>Einstellungen</h1>
+  <div class="eyebrow">{{ t.settings_eyebrow }}</div>
+  <h1>{{ t.settings_title }}</h1>
 </div>
 
 <form method="POST">
   <div class="card fade-up delay-1" style="margin-bottom:10px;">
-    <div style="font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:4px;">Audio</div>
+    <div style="font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-5);margin-bottom:4px;">{{ t.settings_audio }}</div>
     <div class="toggle-row">
-      <div>
-        <div class="toggle-label">Soundeffekte</div>
-        <div class="toggle-sub">Klänge bei Spielaktionen</div>
-      </div>
-      <label class="toggle">
-        <input type="checkbox" name="sound" {% if settings.sound == 'on' %}checked{% endif %}>
-        <span class="toggle-slider"></span>
-      </label>
+      <div><div class="toggle-label">{{ t.settings_sfx }}</div><div class="toggle-sub">{{ t.settings_sfx_sub }}</div></div>
+      <label class="toggle"><input type="checkbox" name="sound" id="sfx-toggle" {% if settings.sound=='on' %}checked{% endif %}><span class="toggle-slider"></span></label>
     </div>
     <div class="toggle-row">
-      <div>
-        <div class="toggle-label">Hintergrundmusik</div>
-        <div class="toggle-sub">Atmosphärische Begleitmusik</div>
-      </div>
-      <label class="toggle">
-        <input type="checkbox" name="music" {% if settings.music == 'on' %}checked{% endif %}>
-        <span class="toggle-slider"></span>
-      </label>
+      <div><div class="toggle-label">{{ t.settings_music }}</div><div class="toggle-sub">{{ t.settings_music_sub }}</div></div>
+      <label class="toggle"><input type="checkbox" name="music" id="music-toggle" {% if settings.music=='on' %}checked{% endif %}><span class="toggle-slider"></span></label>
     </div>
   </div>
 
   <div class="card fade-up delay-2" style="margin-bottom:10px;">
-    <div style="font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:4px;">Benachrichtigungen</div>
+    <div style="font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-5);margin-bottom:4px;">{{ t.settings_notif }}</div>
     <div class="toggle-row">
-      <div>
-        <div class="toggle-label">Push-Benachrichtigungen</div>
-        <div class="toggle-sub">Einladungen und Updates</div>
-      </div>
-      <label class="toggle">
-        <input type="checkbox" name="notifications" {% if settings.notifications == 'on' %}checked{% endif %}>
-        <span class="toggle-slider"></span>
-      </label>
+      <div><div class="toggle-label">{{ t.settings_push }}</div><div class="toggle-sub">{{ t.settings_push_sub }}</div></div>
+      <label class="toggle"><input type="checkbox" name="notifications" {% if settings.notifications=='on' %}checked{% endif %}><span class="toggle-slider"></span></label>
     </div>
   </div>
 
   <div class="card fade-up delay-3" style="margin-bottom:24px;">
-    <div style="font-size:.72rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:16px;">Sprache</div>
+    <div style="font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-5);margin-bottom:16px;">{{ t.settings_language }}</div>
     <div class="form-group" style="margin-bottom:0;">
-      <label>Spielsprache</label>
+      <label>{{ t.settings_lang_label }}</label>
       <select name="language">
-        <option value="de" {% if settings.language=='de' %}selected{% endif %}>Deutsch</option>
-        <option value="at" {% if settings.language=='at' %}selected{% endif %}>Österreichisch</option>
-        <option value="en" {% if settings.language=='en' %}selected{% endif %}>English</option>
+        <option value="en" {% if settings.language=='en' %}selected{% endif %}>🇬🇧 English</option>
+        <option value="de" {% if settings.language=='de' %}selected{% endif %}>🇩🇪 Deutsch</option>
+        <option value="fr" {% if settings.language=='fr' %}selected{% endif %}>🇫🇷 Français</option>
+        <option value="it" {% if settings.language=='it' %}selected{% endif %}>🇮🇹 Italiano</option>
+        <option value="es" {% if settings.language=='es' %}selected{% endif %}>🇪🇸 Español</option>
+        <option value="pt" {% if settings.language=='pt' %}selected{% endif %}>🇵🇹 Português</option>
       </select>
     </div>
   </div>
 
-  <button type="submit" class="btn btn-primary fade-up delay-4">Speichern</button>
+  <button type="submit" class="btn btn-primary fade-up delay-4">{{ t.settings_save }}</button>
 </form>
 
-<div style="margin-top:48px; padding-top:24px; border-top:1px solid var(--grey-2); color:var(--grey-5); font-size:.75rem;">
-  Krimi Dinner · Version 0.1.0 · Martini Entertainment
+<div style="margin-top:48px;padding-top:24px;border-top:1px solid var(--grey-2);color:var(--grey-5);font-size:.75rem;">
+  Krimi Dinner · {{ t.settings_version }} 0.1.0 · Martini Entertainment
 </div>
+{% endblock %}
 {% block scripts %}
 <script>
-// Sync toggles with localStorage
-document.querySelectorAll('.toggle input').forEach(inp => {
-  const key = inp.name;
-  if (key === 'sound' || key === 'music') {
-    const stored = localStorage.getItem(key);
-    if (stored === 'off') inp.checked = false;
-    inp.addEventListener('change', () => {
-      localStorage.setItem(key, inp.checked ? 'on' : 'off');
-      if (key === 'music') {
-        try { inp.checked ? KrimiSound.startMusic() : KrimiSound.stopMusic(); } catch(e){}
-      }
-    });
-  }
+document.getElementById('sfx-toggle').addEventListener('change', function() {
+  localStorage.setItem('sfx', this.checked ? 'on' : 'off');
+});
+document.getElementById('music-toggle').addEventListener('change', function() {
+  localStorage.setItem('music', this.checked ? 'on' : 'off');
+  try { this.checked ? KrimiSound.startMusic() : KrimiSound.stopMusic(); } catch(e){}
 });
 </script>
-{% endblock %}
 {% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ friend.username }} – Krimi Dinner{% endblock %}
+{% block head %}
+<style>
+  .fp-avatar { width:72px; height:72px; border-radius:50%; background:var(--grey-2); border:1px solid var(--grey-3); display:flex; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:1.8rem; color:var(--white); margin-bottom:12px; }
+  .fp-name { font-family:'DM Serif Display',serif; font-size:1.4rem; margin-bottom:2px; }
+  .fp-sub { font-size:.75rem; color:var(--grey-5); letter-spacing:.06em; text-transform:uppercase; margin-bottom:32px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="fade-up" style="margin-bottom:8px;">
+  <a href="/friends" class="btn btn-ghost btn-sm">← {{ t.friend_profile_back }}</a>
+</div>
+<div class="page-header fade-up delay-1">
+  <div class="fp-avatar">{{ friend.username[0].upper() }}</div>
+  <div class="fp-name">{{ friend.username }}</div>
+  <div class="fp-sub">{{ t.profile_rank }} 1</div>
+</div>
+
+<div class="stats-grid fade-up delay-2">
+  <div class="stat-cell">
+    <div class="stat-number">{{ stats.games }}</div>
+    <div class="stat-label">{{ t.friend_profile_games }}</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-number">{{ stats.wins }}</div>
+    <div class="stat-label">{{ t.friend_profile_wins }}</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-number">{{ stats.murderer }}</div>
+    <div class="stat-label">{{ t.friend_profile_murderer }}</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-number">{{ stats.solved }}</div>
+    <div class="stat-label">{{ t.friend_profile_solved }}</div>
+  </div>
+</div>
+{% endblock %}

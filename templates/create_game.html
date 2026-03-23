@@ -1,72 +1,48 @@
 {% extends "base.html" %}
-{% block title %}Spiel erstellen{% endblock %}
+{% block title %}{{ t.create_title }} – Krimi Dinner{% endblock %}
 {% block head %}
 <style>
-  .scenario-option { display: none; }
-  .scenario-label {
-    display: flex; align-items: center; gap: 16px;
-    padding: 16px 18px;
-    border: 1px solid var(--grey-2);
-    border-radius: 6px; background: var(--grey-1);
-    cursor: pointer; margin-bottom: 8px;
-    transition: border-color .2s;
-  }
-  .scenario-option:checked + .scenario-label { border-color: var(--white); }
-  .scenario-label:hover { border-color: var(--grey-4); }
-  .scenario-check {
-    width: 16px; height: 16px; border-radius: 50%;
-    border: 1px solid var(--grey-4); margin-left: auto; flex-shrink: 0;
-    position: relative;
-  }
-  .scenario-option:checked + .scenario-label .scenario-check { border-color: var(--white); }
-  .scenario-option:checked + .scenario-label .scenario-check::after {
-    content: ''; position: absolute; inset: 3px;
-    background: var(--white); border-radius: 50%;
-  }
-  .scenario-name  { font-size: 0.9rem; font-weight: 500; color: var(--white); }
-  .scenario-info  { font-size: 0.75rem; color: var(--grey-5); margin-top: 1px; }
-  .locked-overlay { opacity: 0.3; pointer-events: none; }
+  .scenario-option { display:none; }
+  .scenario-label { display:flex; align-items:center; gap:16px; padding:16px 18px; border:1px solid var(--grey-2); border-radius:6px; background:var(--grey-1); cursor:pointer; margin-bottom:8px; transition:border-color .2s; }
+  .scenario-option:checked + .scenario-label { border-color:var(--white); }
+  .scenario-label:hover { border-color:var(--grey-4); }
+  .scenario-check { width:16px; height:16px; border-radius:50%; border:1px solid var(--grey-4); margin-left:auto; flex-shrink:0; position:relative; }
+  .scenario-option:checked + .scenario-label .scenario-check { border-color:var(--white); }
+  .scenario-option:checked + .scenario-label .scenario-check::after { content:''; position:absolute; inset:3px; background:var(--white); border-radius:50%; }
 </style>
 {% endblock %}
 {% block content %}
 <div class="page-header fade-up">
-  <div class="eyebrow">Neues Spiel</div>
-  <h1>Szenario wählen</h1>
-  <p>Wählen Sie den Fall für heute Abend.</p>
+  <div class="eyebrow">{{ t.create_eyebrow }}</div>
+  <h1>{{ t.create_title }}</h1>
+  <p>{{ t.create_sub }}</p>
 </div>
-
 <form method="POST">
-  <div style="margin-bottom: 28px;">
+  <div style="margin-bottom:28px;">
     <input class="scenario-option" type="radio" name="scenario" id="s1" value="orient" checked>
     <label class="scenario-label fade-up delay-1" for="s1">
       <div>
-        <div class="scenario-name">Mord im Orient-Express</div>
-        <div class="scenario-info">Historisch · 5–10 Spieler · 75 Min · Im Besitz</div>
+        <div style="font-size:.9rem;font-weight:500;color:var(--white);">Mord im Orient-Express</div>
+        <div style="font-size:.75rem;color:var(--grey-5);">{{ t.genre_historical }} · 5–10 · 75 min · {{ t.create_owned }}</div>
       </div>
       <span class="scenario-check"></span>
     </label>
-
-    <div class="locked-overlay">
+    <div style="opacity:.3;pointer-events:none;">
       <div class="scenario-label fade-up delay-2">
         <div>
-          <div class="scenario-name">Das Venedig-Komplott</div>
-          <div class="scenario-info">Klassisch · 4–8 Spieler · 90 Min · <span style="color:var(--grey-6)">4,99 €</span></div>
+          <div style="font-size:.9rem;font-weight:500;color:var(--white);">Das Venedig-Komplott</div>
+          <div style="font-size:.75rem;color:var(--grey-5);">{{ t.genre_classic }} · 4–8 · 90 min · <span style="color:var(--grey-6)">4,99 €</span></div>
         </div>
-        <a href="/shop" class="btn btn-sm" style="margin-left:auto">Kaufen</a>
+        <a href="/shop" class="btn btn-sm" style="margin-left:auto">{{ t.create_buy }}</a>
       </div>
     </div>
   </div>
-
   <div class="form-group fade-up delay-3">
-    <label>Maximale Spieleranzahl</label>
+    <label>{{ t.create_max_players }}</label>
     <select name="max_players">
-      <option>3</option><option>4</option><option selected>6</option>
-      <option>8</option><option>10</option>
+      <option>3</option><option>4</option><option selected>6</option><option>8</option><option>10</option>
     </select>
   </div>
-
-  <button type="submit" class="btn btn-primary btn-full fade-up delay-4">
-    Raum erstellen
-  </button>
+  <button type="submit" class="btn btn-primary btn-full fade-up delay-4">{{ t.create_btn }}</button>
 </form>
 {% endblock %}

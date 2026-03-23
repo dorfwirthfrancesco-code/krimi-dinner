@@ -1,174 +1,169 @@
 {% extends "base.html" %}
-{% block title %}Lobby – Krimi Dinner{% endblock %}
+{% block title %}{{ t.lobby_title }} – Krimi Dinner{% endblock %}
 {% block head %}
 <style>
-  .lobby-wrap { max-width: 500px; margin: 0 auto; text-align: center; }
-  .lobby-code {
-    font-family: 'DM Serif Display', serif;
-    font-size: 3rem; letter-spacing: 0.5em;
-    color: var(--white); display: inline-block;
-    padding: 20px 32px;
-    border: 1px solid var(--grey-3);
-    border-radius: 8px;
-    background: var(--grey-1);
-    margin: 8px 0 4px;
-  }
-  .lobby-code-label {
-    font-size:.68rem; font-weight:500; letter-spacing:.1em;
-    text-transform:uppercase; color:var(--grey-5); margin-bottom:24px;
-  }
-  .player-list { text-align: left; margin: 20px 0; }
-  .player-slot {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 16px;
-    border: 1px solid var(--grey-2);
-    border-radius: 6px;
-    background: var(--grey-1);
-    margin-bottom: 8px;
-    transition: border-color .3s;
-  }
-  .player-slot.filled { border-color: var(--grey-3); }
-  .player-slot.empty  { opacity: 0.3; border-style: dashed; }
-  .player-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--grey-2); border: 1px solid var(--grey-3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: .75rem; font-weight: 500; color: var(--white);
-    flex-shrink: 0;
-  }
-  .player-name { font-size: .9rem; color: var(--white); }
-  .host-tag {
-    margin-left: auto;
-    font-size: .55rem; font-weight: 600; letter-spacing: .12em;
-    text-transform: uppercase; padding: 2px 8px;
-    border-radius: 3px; background: var(--grey-2); color: var(--grey-5);
-  }
-  .waiting-dot {
-    display: inline-block; width: 6px; height: 6px;
-    border-radius: 50%; background: var(--grey-5);
-    animation: blink 1.2s ease-in-out infinite;
-  }
-  .waiting-dot:nth-child(2) { animation-delay: .2s; }
-  .waiting-dot:nth-child(3) { animation-delay: .4s; }
-  @keyframes blink { 0%,100%{opacity:.2} 50%{opacity:1} }
-  .status-bar {
-    font-size: .78rem; color: var(--grey-5);
-    margin-bottom: 20px; min-height: 20px;
-  }
-  .copy-hint {
-    font-size: .72rem; color: var(--grey-5); margin-bottom: 24px;
-    cursor: pointer; transition: color .2s;
-  }
-  .copy-hint:hover { color: var(--white); }
+  .lobby-wrap { max-width:500px; margin:0 auto; text-align:center; }
+  .lobby-code { font-family:'DM Serif Display',serif; font-size:3rem; letter-spacing:.5em; color:var(--white); display:inline-block; padding:20px 32px; border:1px solid var(--grey-3); border-radius:8px; background:var(--grey-1); margin:8px 0 4px; }
+  .copy-hint { font-size:.72rem; color:var(--grey-5); margin-bottom:24px; cursor:pointer; transition:color .2s; }
+  .copy-hint:hover { color:var(--white); }
+  .player-slot { display:flex; align-items:center; gap:12px; padding:12px 16px; border:1px solid var(--grey-2); border-radius:6px; background:var(--grey-1); margin-bottom:8px; }
+  .player-slot.empty { opacity:.3; border-style:dashed; }
+  .player-avatar { width:28px; height:28px; border-radius:50%; background:var(--grey-2); border:1px solid var(--grey-3); display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:500; color:var(--white); flex-shrink:0; }
+  .host-tag { margin-left:auto; font-size:.55rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; padding:2px 8px; border-radius:3px; background:var(--grey-2); color:var(--grey-5); }
+  .waiting-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--grey-5); animation:blink 1.2s ease-in-out infinite; }
+  .waiting-dot:nth-child(2){animation-delay:.2s}.waiting-dot:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+
+  /* Invite modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:500; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:10px; padding:28px; max-width:360px; width:90%; }
+  .modal-title { font-family:'DM Serif Display',serif; font-size:1.2rem; margin-bottom:20px; }
+  .invite-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--grey-2); }
+  .invite-item:last-child { border-bottom:none; }
+  .invite-avatar { width:34px; height:34px; border-radius:50%; background:var(--grey-2); border:1px solid var(--grey-3); display:flex; align-items:center; justify-content:center; font-size:.85rem; flex-shrink:0; }
+  .invite-name { flex:1; font-size:.9rem; }
+  .invite-sent { font-size:.72rem; color:#27ae60; }
 </style>
 {% endblock %}
 {% block content %}
 <div class="lobby-wrap">
   <div class="page-header fade-up" style="text-align:center;">
-    <div class="eyebrow">Warteraum</div>
-    <h1>Lobby</h1>
+    <div class="eyebrow">{{ t.lobby_eyebrow }}</div>
+    <h1>{{ t.lobby_title }}</h1>
   </div>
 
   <div class="fade-up delay-1">
     <div class="lobby-code" id="lobby-code">{{ code }}</div>
-    <div class="lobby-code-label">Einladungscode</div>
-    <div class="copy-hint" onclick="copyCode()">Zum Kopieren tippen</div>
+    <div style="font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-5);margin-bottom:8px;">{{ t.lobby_code_label }}</div>
+    <div class="copy-hint" onclick="copyCode()" id="copy-hint">{{ t.lobby_copy }}</div>
   </div>
 
-  <div class="status-bar fade-up delay-2" id="status-bar">
-    {% if is_host %}
-      Warten auf Mitspieler
-      <span class="waiting-dot"></span>
-      <span class="waiting-dot"></span>
-      <span class="waiting-dot"></span>
-    {% else %}
-      Warten auf Spielleiter
-      <span class="waiting-dot"></span>
-      <span class="waiting-dot"></span>
-      <span class="waiting-dot"></span>
-    {% endif %}
+  <div style="font-size:.78rem;color:var(--grey-5);margin-bottom:20px;min-height:20px;" id="status-bar">
+    {% if is_host %}{{ t.lobby_waiting_players }}{% else %}{{ t.lobby_waiting_host }}{% endif %}
+    <span class="waiting-dot"></span><span class="waiting-dot"></span><span class="waiting-dot"></span>
   </div>
 
-  <div class="player-list fade-up delay-2" id="player-list">
+  <div style="text-align:left;margin:20px 0;" id="player-list">
     {% for p in players %}
-    <div class="player-slot filled">
+    <div class="player-slot">
       <div class="player-avatar">{{ p[0].upper() }}</div>
-      <div class="player-name">{{ p }}</div>
-      {% if loop.first %}<span class="host-tag">Host</span>{% endif %}
+      <div style="font-size:.9rem;">{{ p }}</div>
+      {% if loop.first %}<span class="host-tag">{{ t.lobby_host_tag }}</span>{% endif %}
     </div>
     {% endfor %}
     {% for i in range(6 - players|length) %}
-    <div class="player-slot empty" id="empty-slot-{{ loop.index }}">
+    <div class="player-slot empty">
       <div class="player-avatar" style="background:transparent;border-style:dashed;">–</div>
-      <div class="player-name" style="color:var(--grey-4);">Wartend</div>
+      <div style="font-size:.85rem;color:var(--grey-4);">{{ t.lobby_waiting_players }}</div>
     </div>
     {% endfor %}
   </div>
 
   {% if is_host %}
-  <div class="fade-up delay-3">
-    <form action="/lobby/{{ code }}/start" method="POST" id="start-form">
-      <button type="submit" class="btn btn-primary btn-full" id="start-btn"
-        {% if players|length < 2 %}disabled{% endif %}>
-        Spiel starten
+  <div class="fade-up delay-3" style="display:flex;flex-direction:column;gap:10px;">
+    <!-- Invite friends button (host only) -->
+    <button class="btn btn-full" onclick="openInviteModal()" {% if not friends_list %}style="opacity:.4;cursor:not-allowed;" disabled{% endif %}>
+      {{ t.lobby_invite_friends }}
+    </button>
+
+    <form action="/lobby/{{ code }}/start" method="POST">
+      <button type="submit" class="btn btn-primary btn-full" id="start-btn" {% if players|length < 2 %}disabled{% endif %}>
+        {{ t.lobby_start }}
       </button>
     </form>
-    <p style="font-size:.75rem;color:var(--grey-5);margin-top:10px;" id="min-hint">
-      {% if players|length < 2 %}Mindestens 2 Spieler benötigt{% endif %}
+    <p style="font-size:.75rem;color:var(--grey-5);" id="min-hint">
+      {% if players|length < 2 %}{{ t.lobby_min_players }}{% endif %}
     </p>
   </div>
   {% endif %}
 
-  <div style="margin-top:16px;" class="fade-up delay-4">
-    <a href="/home" class="btn btn-ghost btn-sm">Lobby verlassen</a>
+  <div style="margin-top:16px;">
+    <a href="/home" class="btn btn-ghost btn-sm">{{ t.lobby_leave }}</a>
+  </div>
+</div>
+
+<!-- Invite modal -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal-box">
+    <div class="modal-title">{{ t.lobby_invite_friends }}</div>
+    {% if friends_list %}
+    <div id="invite-list">
+      {% for f in friends_list %}
+      <div class="invite-item" id="invite-row-{{ f.id }}">
+        <div class="invite-avatar">{{ f.name[0].upper() }}</div>
+        <div class="invite-name">{{ f.name }}</div>
+        <button class="btn btn-primary btn-sm" onclick="sendInvite('{{ f.id }}', this)">
+          {{ t.friends_invite }}
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="color:var(--grey-5);font-size:.88rem;text-align:center;padding:20px 0;">{{ t.lobby_no_friends }}</div>
+    {% endif %}
+    <button class="btn btn-full" style="margin-top:20px;" onclick="closeInviteModal()">{{ t.lobby_close }}</button>
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-const CODE    = '{{ code }}';
-const IS_HOST = {{ 'true' if is_host else 'false' }};
-let lastCount = {{ players|length }};
+const CODE     = '{{ code }}';
+const IS_HOST  = {{ 'true' if is_host else 'false' }};
+const T_COPIED = {{ t.lobby_copied | tojson }};
+const T_COPY   = {{ t.lobby_copy   | tojson }};
+const T_SENT   = {{ t.lobby_invite_sent | tojson }};
+const T_HOST   = {{ t.lobby_host_tag | tojson }};
+const T_WAIT   = {{ t.lobby_waiting_players | tojson }};
+const T_START  = {{ t.lobby_start | tojson }};
+const T_MIN    = {{ t.lobby_min_players | tojson }};
+let lastCount  = {{ players|length }};
 
 function copyCode() {
   navigator.clipboard.writeText(CODE).then(() => {
-    document.querySelector('.copy-hint').textContent = 'Kopiert!';
-    setTimeout(() => document.querySelector('.copy-hint').textContent = 'Zum Kopieren tippen', 2000);
+    document.getElementById('copy-hint').textContent = T_COPIED;
+    setTimeout(() => document.getElementById('copy-hint').textContent = T_COPY, 2000);
   });
 }
 
-function renderPlayers(players, status) {
+function openInviteModal()  { document.getElementById('invite-modal').classList.add('open'); }
+function closeInviteModal() { document.getElementById('invite-modal').classList.remove('open'); }
+
+async function sendInvite(friendId, btn) {
+  btn.disabled = true;
+  await fetch(`/lobby/${CODE}/invite/${friendId}`, {method:'POST'});
+  btn.textContent = T_SENT;
+  btn.style.background = 'var(--grey-3)';
+  btn.style.borderColor = 'var(--grey-3)';
+  btn.style.color = '#27ae60';
+}
+
+function renderPlayers(players) {
   const list = document.getElementById('player-list');
   let html = '';
   players.forEach((name, i) => {
-    html += `<div class="player-slot filled">
+    html += `<div class="player-slot">
       <div class="player-avatar">${name[0].toUpperCase()}</div>
-      <div class="player-name">${name}</div>
-      ${i === 0 ? '<span class="host-tag">Host</span>' : ''}
+      <div style="font-size:.9rem;">${name}</div>
+      ${i===0 ? `<span class="host-tag">${T_HOST}</span>` : ''}
     </div>`;
   });
   for (let i = players.length; i < 6; i++) {
     html += `<div class="player-slot empty">
       <div class="player-avatar" style="background:transparent;border-style:dashed;">–</div>
-      <div class="player-name" style="color:var(--grey-4);">Wartend</div>
+      <div style="font-size:.85rem;color:var(--grey-4);">${T_WAIT}</div>
     </div>`;
   }
   list.innerHTML = html;
-
-  // Update start button
   if (IS_HOST) {
     const btn  = document.getElementById('start-btn');
     const hint = document.getElementById('min-hint');
-    if (btn) {
-      btn.disabled = players.length < 2;
-      if (hint) hint.textContent = players.length < 2 ? 'Mindestens 2 Spieler benötigt' : '';
-    }
+    if (btn)  btn.disabled = players.length < 2;
+    if (hint) hint.textContent = players.length < 2 ? T_MIN : '';
   }
-
-  // New player joined sound
   if (players.length > lastCount) {
-    try { KrimiSound.playClick(); } catch(e) {}
+    try { KrimiSound.playClick(); } catch(e){}
   }
   lastCount = players.length;
 }
@@ -177,19 +172,11 @@ async function pollLobby() {
   try {
     const res  = await fetch(`/api/lobby/${CODE}`);
     const data = await res.json();
-
-    if (data.status === 'playing') {
-      window.location.href = `/game/${CODE}`;
-      return;
-    }
-    if (data.players && data.players.length > 0) {
-      renderPlayers(data.players, data.status);
-    }
-  } catch(e) {}
+    if (data.status === 'playing') { window.location.href = `/game/${CODE}`; return; }
+    if (data.players && data.players.length > 0) renderPlayers(data.players);
+  } catch(e){}
   setTimeout(pollLobby, 3000);
 }
-
-// Start polling after 2 seconds
 setTimeout(pollLobby, 2000);
 </script>
 {% endblock %}
