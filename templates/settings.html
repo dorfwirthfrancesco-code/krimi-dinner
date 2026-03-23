@@ -63,4 +63,22 @@
 <div style="margin-top:48px; padding-top:24px; border-top:1px solid var(--grey-2); color:var(--grey-5); font-size:.75rem;">
   Krimi Dinner · Version 0.1.0 · Martini Entertainment
 </div>
+{% block scripts %}
+<script>
+// Sync toggles with localStorage
+document.querySelectorAll('.toggle input').forEach(inp => {
+  const key = inp.name;
+  if (key === 'sound' || key === 'music') {
+    const stored = localStorage.getItem(key);
+    if (stored === 'off') inp.checked = false;
+    inp.addEventListener('change', () => {
+      localStorage.setItem(key, inp.checked ? 'on' : 'off');
+      if (key === 'music') {
+        try { inp.checked ? KrimiSound.startMusic() : KrimiSound.stopMusic(); } catch(e){}
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
 {% endblock %}

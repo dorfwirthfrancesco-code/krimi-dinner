@@ -1,23 +1,22 @@
-from flask import Flask, render_template, redirect, url_for, session, request
+from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 from functools import wraps
 import os, random, string, json
 import urllib.request, urllib.error
 
-# Lade .env manuell (kein python-dotenv nötig)
+# ── Load .env manually (no external lib needed) ───────────────────────────────
 def load_env():
-    env_path = os.path.join(os.path.dirname(__file__), '.env')
-    if os.path.exists(env_path):
-        with open(env_path, 'r', encoding='utf-8') as f:
+    path = os.path.join(os.path.dirname(__file__), '.env')
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith('#') and '=' in line:
-                    key, val = line.split('=', 1)
-                    os.environ.setdefault(key.strip(), val.strip())
-
+                    k, v = line.split('=', 1)
+                    os.environ.setdefault(k.strip(), v.strip())
 load_env()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'krimi-dinner-dev-key-change-in-production')
+app.secret_key = os.environ.get('SECRET_KEY', 'krimi-dinner-secret-key-2024')
 app.config['PERMANENT_SESSION_LIFETIME'] = __import__('datetime').timedelta(days=30)
 
 # ── Supabase Config ───────────────────────────────────────────────────────────
@@ -25,15 +24,14 @@ SB_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
 SB_KEY = os.environ.get('SUPABASE_KEY', '')
 SB_OK  = bool(SB_URL and SB_KEY and 'DEINE-URL' not in SB_URL)
 
-# ── Supabase HTTP Helpers ─────────────────────────────────────────────────────
+# ── Supabase HTTP ─────────────────────────────────────────────────────────────
 def sb_headers(token=None):
-    h = {
+    return {
         'apikey': SB_KEY,
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {token or SB_KEY}',
         'Prefer': 'return=representation',
     }
-    return h
 
 def sb_get(path, params='', token=None):
     if not SB_OK: return None
@@ -71,8 +69,18 @@ def sb_patch(path, params, data, token=None):
         print(f'[SB PATCH] {path}: {e}')
         return None
 
+def sb_delete(path, params, token=None):
+    if not SB_OK: return None
+    url = f'{SB_URL}/rest/v1/{path}?{params}'
+    req = urllib.request.Request(url, headers=sb_headers(token), method='DELETE')
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return True
+    except Exception as e:
+        print(f'[SB DELETE] {path}: {e}')
+        return False
+
 def sb_auth(path, data):
-    """Supabase Auth API call"""
     if not SB_OK: return None
     url  = f'{SB_URL}/auth/v1/{path}'
     body = json.dumps(data).encode()
@@ -84,8 +92,6 @@ def sb_auth(path, data):
     except urllib.error.HTTPError as e:
         err = json.loads(e.read())
         raise Exception(err.get('msg') or err.get('message') or str(err))
-    except Exception as e:
-        raise
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def gen_code(n=6):
@@ -103,12 +109,11 @@ def get_profile(user_id, token=None):
     if not SB_OK or user_id == 'demo':
         return {'username': session.get('username', 'Gast'), 'genre': '', 'rank': 1}
     rows = sb_get('profiles', f'id=eq.{user_id}&select=*', token)
-    return rows[0] if rows else {'username': session.get('username', 'Gast'), 'genre': '', 'rank': 1}
+    return rows[0] if rows else {'username': session.get('username', 'Gast')}
 
 def get_stats(user_id, token=None):
-    empty = {'games': 0, 'wins': 0, 'murderer': 0, 'solved': 0}
     if not SB_OK or user_id == 'demo':
-        return empty
+        return {'games': 0, 'wins': 0, 'murderer': 0, 'solved': 0}
     rows = sb_get('game_history', f'user_id=eq.{user_id}&select=*', token) or []
     return {
         'games':    len(rows),
@@ -117,7 +122,12 @@ def get_stats(user_id, token=None):
         'solved':   sum(1 for r in rows if r.get('role') == 'Detektiv' and r.get('result') == 'gewonnen'),
     }
 
-# ── Auth Routes ───────────────────────────────────────────────────────────────
+def profiles_by_ids(ids, token=None):
+    if not ids: return {}
+    rows = sb_get('profiles', f'id=in.({",".join(ids)})&select=id,username', token) or []
+    return {r['id']: r['username'] for r in rows}
+
+# ── Splash / Prescreen ────────────────────────────────────────────────────────
 @app.route('/')
 def splash():
     return render_template('splash.html')
@@ -126,6 +136,7 @@ def splash():
 def prescreen():
     return render_template('prescreen.html')
 
+# ── Auth ──────────────────────────────────────────────────────────────────────
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if session.get('user_id'):
@@ -134,19 +145,19 @@ def login():
     if request.method == 'POST':
         email    = request.form.get('email', '').strip()
         password = request.form.get('password', '')
+        remember = request.form.get('remember_me') == 'on'
         if not SB_OK:
+            session.permanent = remember
             session['user_id']  = 'demo'
             session['username'] = email.split('@')[0] if email else 'Gast'
             return redirect(url_for('home'))
         try:
             res = sb_auth('token?grant_type=password', {'email': email, 'password': password})
+            session.permanent       = remember
             session['user_id']      = res['user']['id']
             session['access_token'] = res['access_token']
             p = get_profile(res['user']['id'], res['access_token'])
             session['username'] = p.get('username', email.split('@')[0])
-            remember = request.form.get('remember_me') == 'on'
-            if remember:
-                session.permanent = True
             return redirect(url_for('home'))
         except Exception as e:
             error = 'E-Mail oder Passwort falsch.'
@@ -186,7 +197,7 @@ def register():
                     if res.get('access_token'):
                         session['access_token'] = res['access_token']
                     return redirect(url_for('home'))
-                error = 'Registrierung fehlgeschlagen. Bitte E-Mail bestätigen.'
+                error = 'Bitte E-Mail bestätigen und dann einloggen.'
             except Exception as e:
                 err = str(e)
                 error = 'Diese E-Mail ist bereits registriert.' if 'already' in err.lower() else err
@@ -220,60 +231,13 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ── App Routes ────────────────────────────────────────────────────────────────
+# ── Home ──────────────────────────────────────────────────────────────────────
 @app.route('/home')
 @login_required
 def home():
     return render_template('home.html', username=session.get('username', 'Gast'))
 
-@app.route('/create-game', methods=['GET', 'POST'])
-@login_required
-def create_game():
-    if request.method == 'POST':
-        code  = gen_code()
-        uid   = session.get('user_id')
-        token = session.get('access_token')
-        if SB_OK and uid != 'demo':
-            res = sb_post('lobbies', {
-                'code': code, 'host_id': uid,
-                'scenario': request.form.get('scenario', 'orient'),
-                'max_players': int(request.form.get('max_players', 6))
-            }, token)
-            if res:
-                lobby_id = res[0]['id'] if isinstance(res, list) else res.get('id')
-                if lobby_id:
-                    sb_post('lobby_players', {'lobby_id': lobby_id, 'user_id': uid}, token)
-        session['game_code'] = code
-        return render_template('lobby.html', code=code,
-                               players=[session.get('username', 'Gast')], is_host=True)
-    return render_template('create_game.html')
-
-@app.route('/join-game', methods=['GET', 'POST'])
-@login_required
-def join_game():
-    error = None
-    if request.method == 'POST':
-        code  = request.form.get('code', '').strip().upper()
-        uid   = session.get('user_id')
-        token = session.get('access_token')
-        if len(code) != 6:
-            error = 'Ungültiger Code. Bitte 6 Zeichen eingeben.'
-        else:
-            players = [session.get('username', 'Gast')]
-            if SB_OK and uid != 'demo':
-                lobbies = sb_get('lobbies', f'code=eq.{code}&select=id', token)
-                if lobbies:
-                    lobby_id = lobbies[0]['id']
-                    sb_post('lobby_players', {'lobby_id': lobby_id, 'user_id': uid}, token)
-                    lp = sb_get('lobby_players', f'lobby_id=eq.{lobby_id}&select=profiles(username)', token) or []
-                    players = [r['profiles']['username'] for r in lp if r.get('profiles')]
-                else:
-                    error = 'Lobby nicht gefunden.'
-            if not error:
-                session['game_code'] = code
-                return render_template('lobby.html', code=code, players=players, is_host=False)
-    return render_template('join_game.html', error=error)
-
+# ── Shop ──────────────────────────────────────────────────────────────────────
 @app.route('/shop')
 @login_required
 def shop():
@@ -287,102 +251,7 @@ def shop():
     ]
     return render_template('shop.html', items=items)
 
-@app.route('/friends')
-@login_required
-def friends():
-    uid   = session.get('user_id')
-    token = session.get('access_token')
-    friends_list   = []
-    pending_in     = []
-    pending_out    = []
-    search_results = []
-    search_query   = request.args.get('q', '').strip()
-    msg            = request.args.get('msg', '')
-
-    if SB_OK and uid != 'demo':
-        # --- Accepted friends: get friend_ids, then fetch their profiles ---
-        accepted = sb_get('friendships',
-            f'user_id=eq.{uid}&status=eq.accepted&select=friend_id', token) or []
-        friend_ids = [r['friend_id'] for r in accepted]
-        if friend_ids:
-            id_list = ','.join(friend_ids)
-            profiles = sb_get('profiles', f'id=in.({id_list})&select=id,username', token) or []
-            friends_list = [{'id': p['id'], 'name': p['username']} for p in profiles]
-
-        # --- Incoming pending: someone sent ME a request ---
-        rows_in = sb_get('friendships',
-            f'friend_id=eq.{uid}&status=eq.pending&select=id,user_id', token) or []
-        if rows_in:
-            sender_ids = [r['user_id'] for r in rows_in]
-            id_list2 = ','.join(sender_ids)
-            sender_profiles = sb_get('profiles', f'id=in.({id_list2})&select=id,username', token) or []
-            profile_map = {p['id']: p['username'] for p in sender_profiles}
-            pending_in = [{'id': r['id'], 'user_id': r['user_id'],
-                           'name': profile_map.get(r['user_id'], '?')} for r in rows_in]
-
-        # --- Outgoing pending: I sent requests ---
-        rows_out = sb_get('friendships',
-            f'user_id=eq.{uid}&status=eq.pending&select=id,friend_id', token) or []
-        if rows_out:
-            recv_ids = [r['friend_id'] for r in rows_out]
-            id_list3 = ','.join(recv_ids)
-            recv_profiles = sb_get('profiles', f'id=in.({id_list3})&select=id,username', token) or []
-            profile_map2 = {p['id']: p['username'] for p in recv_profiles}
-            pending_out = [{'id': r['id'], 'name': profile_map2.get(r['friend_id'], '?')}
-                           for r in rows_out]
-
-        # --- Search ---
-        if search_query:
-            results = sb_get('profiles',
-                f'username=ilike.*{search_query}*&select=id,username&limit=10', token) or []
-            known_ids = {uid} | {f['id'] for f in friends_list} | \
-                        {p['user_id'] for p in pending_in} | \
-                        {r['friend_id'] for r in rows_out}
-            search_results = [r for r in results if r['id'] not in known_ids]
-
-    return render_template('friends.html',
-        friends=friends_list, pending_in=pending_in, pending_out=pending_out,
-        search_results=search_results, search_query=search_query, msg=msg)
-@app.route('/friends/add/<friend_id>')
-@login_required
-def friends_add(friend_id):
-    uid   = session.get('user_id')
-    token = session.get('access_token')
-    if SB_OK and uid != 'demo' and uid != friend_id:
-        sb_post('friendships', {'user_id': uid, 'friend_id': friend_id, 'status': 'pending'}, token)
-    return redirect(url_for('friends', msg='sent'))
-
-@app.route('/friends/accept/<friendship_id>')
-@login_required
-def friends_accept(friendship_id):
-    uid   = session.get('user_id')
-    token = session.get('access_token')
-    if SB_OK and uid != 'demo':
-        # Get sender
-        rows = sb_get('friendships', f'id=eq.{friendship_id}&select=user_id,friend_id', token) or []
-        if rows and rows[0]['friend_id'] == uid:
-            sender_id = rows[0]['user_id']
-            # Accept original request
-            sb_patch('friendships', f'id=eq.{friendship_id}', {'status': 'accepted'}, token)
-            # Create reverse so both see each other as friends
-            sb_post('friendships', {
-                'user_id': uid, 'friend_id': sender_id, 'status': 'accepted'
-            }, token)
-    return redirect(url_for('friends'))
-
-@app.route('/friends/decline/<friendship_id>')
-@login_required
-def friends_decline(friendship_id):
-    uid   = session.get('user_id')
-    token = session.get('access_token')
-    if SB_OK and uid != 'demo':
-        import urllib.request as ur
-        url = f'{SB_URL}/rest/v1/friendships?id=eq.{friendship_id}'
-        req = ur.Request(url, headers=sb_headers(token), method='DELETE')
-        try: ur.urlopen(req, timeout=8)
-        except: pass
-    return redirect(url_for('friends'))
-
+# ── Profile ───────────────────────────────────────────────────────────────────
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -399,9 +268,10 @@ def profile():
     p     = get_profile(uid, token)
     stats = get_stats(uid, token)
     return render_template('profile.html',
-                           username=p.get('username', session.get('username', 'Gast')),
-                           profile=p, stats=stats)
+        username=p.get('username', session.get('username', 'Gast')),
+        profile=p, stats=stats)
 
+# ── Settings ──────────────────────────────────────────────────────────────────
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -416,11 +286,217 @@ def settings():
     s = session.get('settings', {'sound':'on','music':'on','notifications':'on','language':'de'})
     return render_template('settings.html', settings=s)
 
+# ── Friends ───────────────────────────────────────────────────────────────────
+@app.route('/friends')
+@login_required
+def friends():
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    friends_list   = []
+    pending_in     = []
+    pending_out    = []
+    search_results = []
+    search_query   = request.args.get('q', '').strip()
+    msg            = request.args.get('msg', '')
+
+    if SB_OK and uid != 'demo':
+        # Accepted friends
+        accepted = sb_get('friendships', f'user_id=eq.{uid}&status=eq.accepted&select=friend_id', token) or []
+        friend_ids = [r['friend_id'] for r in accepted]
+        if friend_ids:
+            pm = profiles_by_ids(friend_ids, token)
+            friends_list = [{'id': fid, 'name': pm.get(fid, '?')} for fid in friend_ids]
+
+        # Incoming pending
+        rows_in = sb_get('friendships', f'friend_id=eq.{uid}&status=eq.pending&select=id,user_id', token) or []
+        if rows_in:
+            pm2 = profiles_by_ids([r['user_id'] for r in rows_in], token)
+            pending_in = [{'id': r['id'], 'user_id': r['user_id'], 'name': pm2.get(r['user_id'], '?')} for r in rows_in]
+
+        # Outgoing pending
+        rows_out = sb_get('friendships', f'user_id=eq.{uid}&status=eq.pending&select=id,friend_id', token) or []
+        if rows_out:
+            pm3 = profiles_by_ids([r['friend_id'] for r in rows_out], token)
+            pending_out = [{'id': r['id'], 'name': pm3.get(r['friend_id'], '?')} for r in rows_out]
+
+        # Search
+        if search_query:
+            results = sb_get('profiles', f'username=ilike.*{search_query}*&select=id,username&limit=10', token) or []
+            known = {uid} | set(friend_ids) | {r['user_id'] for r in rows_in} | {r['friend_id'] for r in rows_out}
+            search_results = [r for r in results if r['id'] not in known]
+    else:
+        friends_list = [
+            {'id': '1', 'name': 'MaxMustermann'},
+            {'id': '2', 'name': 'ElsaKrimi'},
+        ]
+
+    return render_template('friends.html',
+        friends=friends_list, pending_in=pending_in, pending_out=pending_out,
+        search_results=search_results, search_query=search_query, msg=msg)
+
+@app.route('/friends/add/<friend_id>')
+@login_required
+def friends_add(friend_id):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    if SB_OK and uid != 'demo' and uid != friend_id:
+        sb_post('friendships', {'user_id': uid, 'friend_id': friend_id, 'status': 'pending'}, token)
+    return redirect(url_for('friends', msg='sent'))
+
+@app.route('/friends/accept/<friendship_id>')
+@login_required
+def friends_accept(friendship_id):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    if SB_OK and uid != 'demo':
+        rows = sb_get('friendships', f'id=eq.{friendship_id}&select=user_id,friend_id', token) or []
+        if rows and rows[0]['friend_id'] == uid:
+            sender_id = rows[0]['user_id']
+            sb_patch('friendships', f'id=eq.{friendship_id}', {'status': 'accepted'}, token)
+            sb_post('friendships', {'user_id': uid, 'friend_id': sender_id, 'status': 'accepted'}, token)
+    return redirect(url_for('friends'))
+
+@app.route('/friends/decline/<friendship_id>')
+@login_required
+def friends_decline(friendship_id):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    if SB_OK and uid != 'demo':
+        sb_delete('friendships', f'id=eq.{friendship_id}', token)
+    return redirect(url_for('friends'))
+
+# ── Lobby ─────────────────────────────────────────────────────────────────────
+@app.route('/create-game', methods=['GET', 'POST'])
+@login_required
+def create_game():
+    if request.method == 'POST':
+        uid      = session.get('user_id')
+        token    = session.get('access_token')
+        code     = gen_code()
+        scenario = request.form.get('scenario', 'orient')
+        max_p    = int(request.form.get('max_players', 6))
+
+        if SB_OK and uid != 'demo':
+            # Delete any old lobbies this user hosted
+            old = sb_get('lobbies', f'host_id=eq.{uid}&status=eq.waiting&select=id', token) or []
+            for o in old:
+                sb_delete('lobby_players', f'lobby_id=eq.{o["id"]}', token)
+                sb_delete('lobbies', f'id=eq.{o["id"]}', token)
+
+            res = sb_post('lobbies', {
+                'code': code, 'host_id': uid,
+                'scenario': scenario, 'max_players': max_p, 'status': 'waiting'
+            }, token)
+            if res:
+                lobby_id = res[0]['id'] if isinstance(res, list) else res.get('id')
+                if lobby_id:
+                    sb_post('lobby_players', {'lobby_id': lobby_id, 'user_id': uid}, token)
+                    session['lobby_id'] = lobby_id
+
+        session['game_code'] = code
+        session['is_host']   = True
+        return redirect(url_for('lobby', code=code))
+    return render_template('create_game.html')
+
+@app.route('/join-game', methods=['GET', 'POST'])
+@login_required
+def join_game():
+    error = None
+    if request.method == 'POST':
+        code  = request.form.get('code', '').strip().upper()
+        uid   = session.get('user_id')
+        token = session.get('access_token')
+        if len(code) != 6:
+            error = 'Ungültiger Code. Bitte 6 Zeichen eingeben.'
+        else:
+            if SB_OK and uid != 'demo':
+                lobbies = sb_get('lobbies', f'code=eq.{code}&status=eq.waiting&select=id,max_players', token) or []
+                if not lobbies:
+                    error = 'Lobby nicht gefunden oder bereits gestartet.'
+                else:
+                    lobby_id = lobbies[0]['id']
+                    # Check if already in lobby
+                    existing = sb_get('lobby_players', f'lobby_id=eq.{lobby_id}&user_id=eq.{uid}&select=id', token) or []
+                    if not existing:
+                        sb_post('lobby_players', {'lobby_id': lobby_id, 'user_id': uid}, token)
+                    session['game_code'] = code
+                    session['lobby_id']  = lobby_id
+                    session['is_host']   = False
+                    return redirect(url_for('lobby', code=code))
+            else:
+                session['game_code'] = code
+                session['is_host']   = False
+                return redirect(url_for('lobby', code=code))
+    return render_template('join_game.html', error=error)
+
+@app.route('/lobby/<code>')
+@login_required
+def lobby(code):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    is_host = session.get('is_host', False)
+    players = [session.get('username', 'Gast')]
+    lobby_id = session.get('lobby_id', '')
+    scenario = 'Mord im Orient-Express'
+
+    if SB_OK and uid != 'demo' and lobby_id:
+        lp = sb_get('lobby_players', f'lobby_id=eq.{lobby_id}&select=user_id', token) or []
+        player_ids = [r['user_id'] for r in lp]
+        if player_ids:
+            pm = profiles_by_ids(player_ids, token)
+            players = [pm.get(pid, '?') for pid in player_ids]
+        lb = sb_get('lobbies', f'id=eq.{lobby_id}&select=scenario,status', token) or []
+        if lb:
+            scenario = lb[0].get('scenario', scenario)
+            if lb[0].get('status') == 'playing':
+                return redirect(url_for('game', code=code))
+
+    return render_template('lobby.html',
+        code=code, players=players, is_host=is_host,
+        lobby_id=lobby_id, scenario=scenario)
+
+@app.route('/lobby/<code>/start', methods=['POST'])
+@login_required
+def lobby_start(code):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    lobby_id = session.get('lobby_id', '')
+    if SB_OK and uid != 'demo' and lobby_id:
+        lb = sb_get('lobbies', f'id=eq.{lobby_id}&select=host_id', token) or []
+        if lb and lb[0]['host_id'] == uid:
+            sb_patch('lobbies', f'id=eq.{lobby_id}', {'status': 'playing'}, token)
+    return redirect(url_for('game', code=code))
+
+@app.route('/game/<code>')
+@login_required
+def game(code):
+    return render_template('game.html', code=code,
+        username=session.get('username', 'Gast'),
+        scenario=session.get('scenario', 'Mord im Orient-Express'))
+
+# ── API: Lobby poll ───────────────────────────────────────────────────────────
+@app.route('/api/lobby/<code>')
+@login_required
+def api_lobby(code):
+    token    = session.get('access_token')
+    lobby_id = session.get('lobby_id', '')
+    if not SB_OK or not lobby_id:
+        return jsonify({'players': [session.get('username','Gast')], 'status': 'waiting', 'count': 1})
+    try:
+        lb = sb_get('lobbies', f'id=eq.{lobby_id}&select=status', token) or []
+        status = lb[0]['status'] if lb else 'waiting'
+        lp = sb_get('lobby_players', f'lobby_id=eq.{lobby_id}&select=user_id', token) or []
+        player_ids = [r['user_id'] for r in lp]
+        pm = profiles_by_ids(player_ids, token) if player_ids else {}
+        players = [pm.get(pid, '?') for pid in player_ids]
+        return jsonify({'players': players, 'status': status, 'count': len(players)})
+    except Exception as e:
+        print(f'[API lobby] {e}')
+        return jsonify({'players': [], 'status': 'waiting', 'count': 0})
+
 if __name__ == '__main__':
-    print()
-    print('  Krimi Dinner')
-    print(f'  Supabase: {"verbunden (" + SB_URL + ")" if SB_OK else "Demo-Modus (keine .env)"}')
-    print('  http://localhost:5000')
-    print()
     port = int(os.environ.get('PORT', 5000))
+    print(f'\n  Krimi Dinner')
+    print(f'  Supabase: {"verbunden" if SB_OK else "Demo-Modus"}')
+    print(f'  http://localhost:{port}\n')
     app.run(debug=False, host='0.0.0.0', port=port)
