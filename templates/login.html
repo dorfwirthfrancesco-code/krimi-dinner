@@ -46,6 +46,9 @@
         <label for="rm" style="font-size:.82rem;color:#888;cursor:pointer;margin:0;letter-spacing:normal;text-transform:none;">{{ t.login_remember }}</label>
       </div>
       {% if error %}<div class="error-message" style="margin-bottom:16px;">{{ error }}</div>{% endif %}
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+        <a href="/forgot-password" style="font-size:.75rem;color:var(--grey-5);text-decoration:none;">Forgot password?</a>
+      </div>
       <button type="submit" class="btn btn-primary btn-full">{{ t.login_btn }}</button>
     </form>
 

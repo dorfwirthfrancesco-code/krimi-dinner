@@ -1,5 +1,16 @@
 {% extends "base.html" %}
-{% block title %}{{ t.profile_title }} – Krimi Dinner{% endblock %}
+{% block title %}{{ t.profile_title }} – Krimi Dinner{% block scripts %}
+<script>
+document.querySelectorAll('input[name="avatar"]').forEach(inp => {
+  const box = inp.nextElementSibling;
+  if (inp.checked) box.style.borderColor = 'var(--white)';
+  inp.addEventListener('change', () => {
+    document.querySelectorAll('.avatar-opt').forEach(b => b.style.borderColor = 'transparent');
+    box.style.borderColor = 'var(--white)';
+  });
+});
+</script>
+{% endblock %}
 {% block content %}
 <div class="page-header fade-up">
   <div class="eyebrow">{{ t.profile_eyebrow }}</div>
@@ -7,7 +18,8 @@
 </div>
 
 <div style="margin-bottom:32px;" class="fade-up delay-1">
-  <div style="width:72px;height:72px;border-radius:50%;background:var(--grey-2);border:1px solid var(--grey-3);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--white);margin-bottom:12px;">{{ username[0].upper() }}</div>
+  {% set avatars = ['🕵️','🎭','🔍','🗡️','🍸','🧐','👑','🎩','🕯️','📜','🗝️','💀'] %}
+  <div style="width:72px;height:72px;border-radius:50%;background:var(--grey-2);border:1px solid var(--grey-3);display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin-bottom:12px;">{{ avatars[(profile.avatar_id or 1) - 1] }}</div>
   <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:2px;">{{ username }}</div>
   <div style="font-size:.75rem;color:var(--grey-5);letter-spacing:.06em;text-transform:uppercase;">{{ t.profile_rank }} {{ profile.rank or 1 }}</div>
 </div>
@@ -22,6 +34,19 @@
 <div class="card fade-up delay-3" style="margin-bottom:16px;">
   <div style="font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-5);margin-bottom:18px;">{{ t.profile_edit }}</div>
   <form method="POST">
+    <!-- Avatar picker -->
+    <div class="form-group">
+      <label>Avatar</label>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:4px;">
+        {% set avatars = ['🕵️','🎭','🔍','🗡️','🍸','🧐','👑','🎩','🕯️','📜','🗝️','💀'] %}
+        {% for i in range(avatars|length) %}
+        <label style="cursor:pointer;text-align:center;">
+          <input type="radio" name="avatar" value="{{ i+1 }}" style="display:none;" {% if (profile.avatar_id or 1) == i+1 %}checked{% endif %}>
+          <div class="avatar-opt" style="font-size:1.6rem;padding:8px;border-radius:8px;border:2px solid transparent;transition:border-color .15s;" data-val="{{ i+1 }}">{{ avatars[i] }}</div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
     <div class="form-group">
       <label>{{ t.profile_name }}</label>
       <input type="text" name="username" value="{{ username }}" maxlength="20">

@@ -27,7 +27,12 @@ SB_OK  = bool(SB_URL and SB_KEY and 'DEINE-URL' not in SB_URL)
 @app.context_processor
 def inject_t():
     lang = session.get('lang', 'en')
-    return {'t': get_t(lang), 'lang': lang, 'supported_langs': SUPPORTED_LANGS}
+    return {
+        't': get_t(lang),
+        'lang': lang,
+        'supported_langs': SUPPORTED_LANGS,
+        'config': {'SUPABASE_URL': SB_URL, 'SUPABASE_KEY': SB_KEY},
+    }
 
 # ── Supabase HTTP ─────────────────────────────────────────────────────────────
 def sb_headers(token=None):
@@ -97,6 +102,18 @@ def sb_auth(path, data):
     except urllib.error.HTTPError as e:
         err = json.loads(e.read())
         raise Exception(err.get('msg') or err.get('message') or str(err))
+
+def sb_auth_reset(email):
+    if not SB_OK: return None
+    url  = f'{SB_URL}/auth/v1/recover'
+    body = json.dumps({'email': email}).encode()
+    h    = {'apikey': SB_KEY, 'Content-Type': 'application/json'}
+    req  = urllib.request.Request(url, data=body, headers=h, method='POST')
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raise Exception(json.loads(e.read()).get('msg', 'Error'))
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def gen_code(n=6):
@@ -256,6 +273,40 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    msg = None
+    error = None
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        if not email:
+            error = 'Please enter your email.'
+        elif not SB_OK:
+            msg = 'Demo mode — password reset not available.'
+        else:
+            try:
+                sb_auth_reset(email)
+                msg = 'Check your email for a reset link.'
+            except Exception as e:
+                error = str(e)
+    return render_template('forgot_password.html', msg=msg, error=error)
+
+@app.route('/save-game', methods=['POST'])
+@login_required
+def save_game():
+    '''Called when a game ends to save history.'''
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    data  = request.get_json() or {}
+    if SB_OK and uid != 'demo':
+        sb_post('game_history', {
+            'user_id':  uid,
+            'scenario': data.get('scenario', ''),
+            'role':     data.get('role', ''),
+            'result':   data.get('result', ''),
+        }, token)
+    return jsonify({'ok': True})
+
 # ── Home ──────────────────────────────────────────────────────────────────────
 @app.route('/home')
 @login_required
@@ -291,9 +342,11 @@ def profile():
             session['username'] = uname
         if lang in SUPPORTED_LANGS:
             session['lang'] = lang
+        avatar = request.form.get('avatar', '')
         if SB_OK and uid != 'demo':
             update = {'genre': genre, 'lang': lang}
             if uname: update['username'] = uname
+            if avatar.isdigit(): update['avatar_id'] = int(avatar)
             sb_patch('profiles', f'id=eq.{uid}', update, token)
         return redirect(url_for('profile'))
     p     = get_profile(uid, token)

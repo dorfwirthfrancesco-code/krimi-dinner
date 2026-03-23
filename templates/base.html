@@ -43,6 +43,8 @@
     @keyframes progress { from{width:100%} to{width:0%} }
     .notif-card { position:relative; overflow:hidden; }
   </style>
+  <meta name="sb-url" content="{{ config.get('SUPABASE_URL','') if config else '' }}">
+  <meta name="sb-key" content="{{ config.get('SUPABASE_KEY','') if config else '' }}">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -95,18 +97,20 @@
 
 <script src="{{ url_for('static', filename='js/sounds.js') }}"></script>
 
-<!-- Notification polling system -->
+<!-- Notification system (Realtime + polling fallback) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-const T_INVITED  = {{ t.notif_invited | tojson }};
-const T_ACCEPT   = {{ t.notif_accept  | tojson }};
-const T_DECLINE  = {{ t.notif_decline | tojson }};
+const T_INVITED = {{ t.notif_invited | tojson }};
+const T_ACCEPT  = {{ t.notif_accept  | tojson }};
+const T_DECLINE = {{ t.notif_decline | tojson }};
+const NOTIF_SB_URL = document.querySelector('meta[name="sb-url"]')?.content || '';
+const NOTIF_SB_KEY = document.querySelector('meta[name="sb-key"]')?.content || '';
 
 const shownInvites = new Set();
 
 function showInviteNotif(invite) {
   if (shownInvites.has(invite.id)) return;
   shownInvites.add(invite.id);
-
   const card = document.createElement('div');
   card.className = 'notif-card';
   card.innerHTML = `
@@ -118,13 +122,10 @@ function showInviteNotif(invite) {
         <button class="notif-btn notif-btn-decline" onclick="declineInvite('${invite.id}',this)">${T_DECLINE}</button>
       </div>
     </div>
-    <div class="notif-progress"></div>
-  `;
+    <div class="notif-progress"></div>`;
   document.getElementById('notif-container').appendChild(card);
-  try { KrimiSound.playClick(); } catch(e) {}
-
-  // Auto-dismiss after 8s
-  setTimeout(() => dismissNotif(card), 8000);
+  try { KrimiSound.playClick(); } catch(e){}
+  setTimeout(() => dismissNotif(card), 9000);
 }
 
 function dismissNotif(card) {
@@ -134,31 +135,63 @@ function dismissNotif(card) {
 
 async function acceptInvite(id, code, btn) {
   btn.disabled = true;
-  const res = await fetch(`/api/invites/${id}/accept`, {method:'POST'});
+  const res = await fetch(`/api/invites/${id}/accept`, { method: 'POST' });
   const data = await res.json();
-  if (data.ok && data.code) {
-    window.location.href = `/lobby/${data.code}`;
-  }
+  if (data.ok && data.code) window.location.href = `/lobby/${data.code}`;
   dismissNotif(btn.closest('.notif-card'));
 }
 
 async function declineInvite(id, btn) {
   btn.disabled = true;
-  await fetch(`/api/invites/${id}/decline`, {method:'POST'});
+  await fetch(`/api/invites/${id}/decline`, { method: 'POST' });
   dismissNotif(btn.closest('.notif-card'));
 }
 
-async function pollInvites() {
+async function fetchAndShowInvites() {
   try {
-    const res  = await fetch('/api/invites');
-    const data = await res.json();
-    (data.invites || []).forEach(showInviteNotif);
-  } catch(e) {}
-  setTimeout(pollInvites, 5000);
+    const res = await fetch('/api/invites');
+    const d   = await res.json();
+    (d.invites || []).forEach(showInviteNotif);
+  } catch(e){}
 }
 
-// Start polling
-setTimeout(pollInvites, 3000);
+// Try Realtime, fall back to polling
+async function initNotifRealtime() {
+  if (!NOTIF_SB_URL || !NOTIF_SB_KEY) { setTimeout(pollInvites, 4000); return; }
+  try {
+    const sbClient = supabase.createClient(NOTIF_SB_URL, NOTIF_SB_KEY);
+    const { data: { user } } = await sbClient.auth.getUser();
+    if (!user) { setTimeout(pollInvites, 4000); return; }
+
+    sbClient.channel('invites-' + user.id)
+      .on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'lobby_invites',
+          filter: `to_user_id=eq.${user.id}`
+        }, async (payload) => {
+          // Get sender name
+          const { data } = await sbClient.from('profiles')
+            .select('username').eq('id', payload.new.from_user_id).single();
+          showInviteNotif({
+            id: payload.new.id,
+            code: payload.new.code,
+            from: data?.username || '?'
+          });
+        })
+      .subscribe();
+  } catch(e) {
+    console.warn('Realtime not available, polling:', e);
+    pollInvites();
+  }
+  // Still do initial check for pending invites
+  setTimeout(fetchAndShowInvites, 1500);
+}
+
+async function pollInvites() {
+  await fetchAndShowInvites();
+  setTimeout(pollInvites, 6000);
+}
+
+setTimeout(initNotifRealtime, 2000);
 </script>
 
 {% block scripts %}{% endblock %}

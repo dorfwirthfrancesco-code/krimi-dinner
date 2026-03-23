@@ -30,7 +30,25 @@
     <div class="placeholder-text">{{ t.game_wip_text }}</div>
   </div>
   <div style="margin-top:32px;" class="fade-up delay-3">
-    <a href="/home" class="btn">{{ t.game_end }}</a>
+    <button class="btn" onclick="endGame()">{{ t.game_end }}</button>
+
+<script>
+async function endGame() {
+  // Save game history (placeholder role/result for now)
+  try {
+    await fetch('/save-game', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scenario: '{{ scenario }}',
+        role: 'detective',
+        result: 'finished'
+      })
+    });
+  } catch(e){}
+  window.location.href = '/home';
+}
+</script>
   </div>
 </div>
 {% endblock %}

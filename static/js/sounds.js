@@ -1,164 +1,169 @@
-// ── Krimi Dinner Sound System ─────────────────────────────────────────────────
-// Atmospheric background music + UI click sounds using Web Audio API
-// No external files needed
-
+/**
+ * KrimiSound v2 — Deep atmospheric noir audio
+ * Continuous looping buffer — never breaks or cuts out.
+ */
 const KrimiSound = (() => {
   let ctx = null;
+  let masterGain = null;
   let musicGain = null;
-  let musicNodes = [];
+  let sfxGain = null;
+  let musicSource = null;
+  let musicBuffer = null;
   let musicPlaying = false;
-  let sfxEnabled = true;
-  let musicEnabled = true;
 
   function getCtx() {
     if (!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(1, ctx.currentTime);
+      masterGain.connect(ctx.destination);
       musicGain = ctx.createGain();
-      musicGain.gain.setValueAtTime(0.08, ctx.currentTime);
-      musicGain.connect(ctx.destination);
+      musicGain.gain.setValueAtTime(0, ctx.currentTime);
+      musicGain.connect(masterGain);
+      sfxGain = ctx.createGain();
+      sfxGain.gain.setValueAtTime(0.45, ctx.currentTime);
+      sfxGain.connect(masterGain);
     }
     return ctx;
   }
 
-  // ── Click sound: short soft tap ──────────────────────────────────────────
-  function playClick() {
-    if (!sfxEnabled) return;
-    try {
-      const c = getCtx();
-      const osc  = c.createOscillator();
-      const gain = c.createGain();
-      osc.connect(gain);
-      gain.connect(c.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, c.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(440, c.currentTime + 0.06);
-      gain.gain.setValueAtTime(0.12, c.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
-      osc.start(c.currentTime);
-      osc.stop(c.currentTime + 0.08);
-    } catch(e) {}
-  }
+  // Build a 40-second stereo buffer of deep noir ambient drone.
+  // Low sine waves in A-minor + filtered noise texture.
+  function buildBuffer() {
+    const c  = getCtx();
+    const sr = c.sampleRate;
+    const dur = 40;
+    const buf = c.createBuffer(2, sr * dur, sr);
 
-  // ── Atmospheric noir background music ────────────────────────────────────
-  // Slow ambient drone with subtle movement
-  function createDroneNote(freq, detune, startTime, duration) {
-    const c = getCtx();
-    const osc  = c.createOscillator();
-    const gain = c.createGain();
-    osc.connect(gain);
-    gain.connect(musicGain);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, startTime);
-    osc.detune.setValueAtTime(detune, startTime);
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(1, startTime + 2);
-    gain.gain.setValueAtTime(1, startTime + duration - 2);
-    gain.gain.linearRampToValueAtTime(0, startTime + duration);
-    osc.start(startTime);
-    osc.stop(startTime + duration);
-    return { osc, gain };
-  }
+    const leftFreqs  = [55, 82.4, 110, 130.8];
+    const rightFreqs = [54.6, 82.1, 110.4, 131.2];
 
-  function createFilteredNoise(startTime, duration) {
-    const c = getCtx();
-    const bufferSize = c.sampleRate * 2;
-    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-    const data   = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    for (let ch = 0; ch < 2; ch++) {
+      const data  = buf.getChannelData(ch);
+      const freqs = ch === 0 ? leftFreqs : rightFreqs;
 
-    const source = c.createBufferSource();
-    source.buffer = buffer;
-    source.loop   = true;
+      // LPF state for noise
+      let prev = 0;
 
-    const filter = c.createBiquadFilter();
-    filter.type  = 'lowpass';
-    filter.frequency.setValueAtTime(120, startTime);
+      for (let i = 0; i < sr * dur; i++) {
+        const t = i / sr;
+        let s = 0;
 
-    const gain = c.createGain();
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(0.15, startTime + 3);
-    gain.gain.setValueAtTime(0.15, startTime + duration - 3);
-    gain.gain.linearRampToValueAtTime(0, startTime + duration);
+        // Layered sine drones
+        freqs.forEach((f, idx) => {
+          const baseAmp = 0.16 / (idx + 1);
+          // Very slow LFO breathing (0.05–0.12 Hz)
+          const lfo = 1 + 0.25 * Math.sin(2 * Math.PI * (0.05 + idx * 0.015) * t);
+          s += baseAmp * lfo * Math.sin(2 * Math.PI * f * t);
+        });
 
-    source.connect(filter);
-    filter.connect(gain);
-    gain.connect(musicGain);
-    source.start(startTime);
-    source.stop(startTime + duration);
-    return source;
-  }
+        // Deep sub (27.5 Hz, very soft)
+        s += 0.05 * Math.sin(2 * Math.PI * 27.5 * t);
 
-  function scheduleMusicLoop() {
-    if (!musicPlaying || !musicEnabled) return;
-    const c   = getCtx();
-    const now = c.currentTime;
-    const dur = 24; // seconds per loop
+        // Lowpass filtered noise (wind-like, very quiet)
+        const noise = Math.random() * 2 - 1;
+        prev = 0.97 * prev + 0.03 * noise; // simple RC lowpass
+        s += prev * 0.07;
 
-    // Minor chord drone: Am feel (A2, E3, A3, C4)
-    const notes = [
-      { freq: 110,  detune: 0   },  // A2
-      { freq: 165,  detune: -8  },  // E3
-      { freq: 220,  detune: 5   },  // A3
-      { freq: 261,  detune: -5  },  // C4
-      { freq: 82.4, detune: 0   },  // E2
-    ];
+        // Fade in/out at loop boundaries (2 s each end)
+        const fade = sr * 2;
+        if (i < fade)              s *= i / fade;
+        if (i > sr * dur - fade)   s *= (sr * dur - i) / fade;
 
-    notes.forEach(n => createDroneNote(n.freq, n.detune, now, dur));
-    createFilteredNoise(now, dur);
-
-    // Schedule next loop
-    setTimeout(scheduleMusicLoop, (dur - 2) * 1000);
+        data[i] = Math.max(-1, Math.min(1, s));
+      }
+    }
+    return buf;
   }
 
   function startMusic() {
-    if (musicPlaying || !musicEnabled) return;
+    if (musicPlaying) return;
+    if (localStorage.getItem('music') === 'off') return;
     try {
-      getCtx();
-      if (ctx.state === 'suspended') ctx.resume();
+      const c = getCtx();
+      if (c.state === 'suspended') c.resume();
+      if (!musicBuffer) musicBuffer = buildBuffer();
+
+      musicSource        = c.createBufferSource();
+      musicSource.buffer = musicBuffer;
+      musicSource.loop   = true; // ← seamless loop, never stops
+      musicSource.connect(musicGain);
+      musicSource.start(0);
+
+      // Gentle fade-in
+      musicGain.gain.cancelScheduledValues(c.currentTime);
+      musicGain.gain.setValueAtTime(0, c.currentTime);
+      musicGain.gain.linearRampToValueAtTime(0.5, c.currentTime + 4);
+
       musicPlaying = true;
-      scheduleMusicLoop();
-    } catch(e) {}
+    } catch(e) { console.warn('[KrimiSound] music error:', e); }
   }
 
   function stopMusic() {
-    musicPlaying = false;
-    if (musicGain) {
-      musicGain.gain.linearRampToValueAtTime(0, getCtx().currentTime + 1.5);
-    }
+    if (!musicPlaying || !musicSource) return;
+    try {
+      const c = getCtx();
+      musicGain.gain.linearRampToValueAtTime(0, c.currentTime + 2);
+      const src = musicSource;
+      setTimeout(() => { try { src.stop(); } catch(e){} }, 2200);
+      musicPlaying = false;
+      musicSource  = null;
+    } catch(e){}
   }
 
-  function setSfx(on)   { sfxEnabled   = on; }
-  function setMusic(on) {
-    musicEnabled = on;
-    if (on)  startMusic();
-    else     stopMusic();
+  // Soft dull thud click — lowpass-filtered noise burst
+  function playClick() {
+    if (localStorage.getItem('sfx') === 'off') return;
+    try {
+      const c = getCtx();
+      if (c.state === 'suspended') c.resume();
+
+      const len  = Math.floor(c.sampleRate * 0.055);
+      const nb   = c.createBuffer(1, len, c.sampleRate);
+      const d    = nb.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+
+      const src = c.createBufferSource();
+      src.buffer = nb;
+
+      const filter = c.createBiquadFilter();
+      filter.type  = 'lowpass';
+      filter.frequency.setValueAtTime(220, c.currentTime);
+      filter.Q.setValueAtTime(0.4, c.currentTime);
+
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.3, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.055);
+
+      src.connect(filter);
+      filter.connect(g);
+      g.connect(sfxGain);
+      src.start();
+      src.stop(c.currentTime + 0.06);
+    } catch(e){}
   }
 
-  // Load preferences
-  function loadPrefs() {
-    sfxEnabled   = localStorage.getItem('sfx')   !== 'off';
-    musicEnabled = localStorage.getItem('music') !== 'off';
-  }
-
-  // ── Init: start music + attach click sounds on first user interaction ──
   function init() {
-    loadPrefs();
-    const startOnce = () => {
-      if (musicEnabled) startMusic();
-      document.removeEventListener('click', startOnce);
-      document.removeEventListener('keydown', startOnce);
+    // Start on first interaction
+    const once = () => {
+      startMusic();
+      document.removeEventListener('click',   once);
+      document.removeEventListener('keydown', once);
     };
-    document.addEventListener('click',   startOnce);
-    document.addEventListener('keydown', startOnce);
+    document.addEventListener('click',   once, { passive: true });
+    document.addEventListener('keydown', once, { passive: true });
 
-    // Attach click sounds to all nav links and buttons
+    // Click sounds on interactive elements
     document.addEventListener('click', (e) => {
-      const el = e.target.closest('a.nav-link, a.bottom-nav-item, .btn, button, a.btn');
-      if (el) playClick();
-    });
+      if (e.target.closest('a, button, .btn, label, .toggle-slider, .action-card, .nav-link, .bottom-nav-item')) {
+        playClick();
+      }
+    }, { passive: true });
   }
 
-  return { init, playClick, startMusic, stopMusic, setSfx, setMusic };
+  return { init, playClick, startMusic, stopMusic,
+           setSfx:   (on) => localStorage.setItem('sfx',   on ? 'on' : 'off'),
+           setMusic: (on) => { localStorage.setItem('music', on ? 'on' : 'off'); on ? startMusic() : stopMusic(); } };
 })();
 
 document.addEventListener('DOMContentLoaded', KrimiSound.init);

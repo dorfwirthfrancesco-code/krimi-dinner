@@ -3,27 +3,24 @@
 {% block head %}
 <style>
   .lobby-wrap { max-width:500px; margin:0 auto; text-align:center; }
-  .lobby-code { font-family:'DM Serif Display',serif; font-size:3rem; letter-spacing:.5em; color:var(--white); display:inline-block; padding:20px 32px; border:1px solid var(--grey-3); border-radius:8px; background:var(--grey-1); margin:8px 0 4px; }
-  .copy-hint { font-size:.72rem; color:var(--grey-5); margin-bottom:24px; cursor:pointer; transition:color .2s; }
-  .copy-hint:hover { color:var(--white); }
-  .player-slot { display:flex; align-items:center; gap:12px; padding:12px 16px; border:1px solid var(--grey-2); border-radius:6px; background:var(--grey-1); margin-bottom:8px; }
+  .lobby-code { font-family:'DM Serif Display',serif; font-size:3rem; letter-spacing:.5em; color:var(--white); display:inline-block; padding:20px 32px; border:1px solid var(--grey-3); border-radius:8px; background:var(--grey-1); margin:8px 0 4px; cursor:pointer; transition:border-color .2s; }
+  .lobby-code:hover { border-color:var(--grey-5); }
+  .copy-hint { font-size:.72rem; color:var(--grey-5); margin-bottom:24px; }
+  .player-slot { display:flex; align-items:center; gap:12px; padding:12px 16px; border:1px solid var(--grey-2); border-radius:6px; background:var(--grey-1); margin-bottom:8px; transition:all .3s; }
   .player-slot.empty { opacity:.3; border-style:dashed; }
+  .player-slot.new-player { animation:slideIn .4s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
   .player-avatar { width:28px; height:28px; border-radius:50%; background:var(--grey-2); border:1px solid var(--grey-3); display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:500; color:var(--white); flex-shrink:0; }
   .host-tag { margin-left:auto; font-size:.55rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; padding:2px 8px; border-radius:3px; background:var(--grey-2); color:var(--grey-5); }
-  .waiting-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--grey-5); animation:blink 1.2s ease-in-out infinite; }
-  .waiting-dot:nth-child(2){animation-delay:.2s}.waiting-dot:nth-child(3){animation-delay:.4s}
-  @keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
-
-  /* Invite modal */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:500; align-items:center; justify-content:center; }
+  .pulse-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#27ae60; animation:pulse 1.5s ease-in-out infinite; margin-right:6px; }
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
   .modal-overlay.open { display:flex; }
-  .modal-box { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:10px; padding:28px; max-width:360px; width:90%; }
+  .modal-box { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:12px; padding:28px; max-width:360px; width:90%; }
   .modal-title { font-family:'DM Serif Display',serif; font-size:1.2rem; margin-bottom:20px; }
   .invite-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--grey-2); }
   .invite-item:last-child { border-bottom:none; }
   .invite-avatar { width:34px; height:34px; border-radius:50%; background:var(--grey-2); border:1px solid var(--grey-3); display:flex; align-items:center; justify-content:center; font-size:.85rem; flex-shrink:0; }
-  .invite-name { flex:1; font-size:.9rem; }
-  .invite-sent { font-size:.72rem; color:#27ae60; }
 </style>
 {% endblock %}
 {% block content %}
@@ -34,14 +31,14 @@
   </div>
 
   <div class="fade-up delay-1">
-    <div class="lobby-code" id="lobby-code">{{ code }}</div>
-    <div style="font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-5);margin-bottom:8px;">{{ t.lobby_code_label }}</div>
-    <div class="copy-hint" onclick="copyCode()" id="copy-hint">{{ t.lobby_copy }}</div>
+    <div class="lobby-code" onclick="copyCode()">{{ code }}</div>
+    <div style="font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-5);margin-bottom:6px;">{{ t.lobby_code_label }}</div>
+    <div class="copy-hint" id="copy-hint">{{ t.lobby_copy }}</div>
   </div>
 
-  <div style="font-size:.78rem;color:var(--grey-5);margin-bottom:20px;min-height:20px;" id="status-bar">
-    {% if is_host %}{{ t.lobby_waiting_players }}{% else %}{{ t.lobby_waiting_host }}{% endif %}
-    <span class="waiting-dot"></span><span class="waiting-dot"></span><span class="waiting-dot"></span>
+  <div style="font-size:.78rem;color:var(--grey-5);margin-bottom:16px;min-height:20px;">
+    <span class="pulse-dot"></span>
+    <span id="status-text">{% if is_host %}{{ t.lobby_waiting_players }}{% else %}{{ t.lobby_waiting_host }}{% endif %}</span>
   </div>
 
   <div style="text-align:left;margin:20px 0;" id="player-list">
@@ -62,25 +59,19 @@
 
   {% if is_host %}
   <div class="fade-up delay-3" style="display:flex;flex-direction:column;gap:10px;">
-    <!-- Invite friends button (host only) -->
-    <button class="btn btn-full" onclick="openInviteModal()" {% if not friends_list %}style="opacity:.4;cursor:not-allowed;" disabled{% endif %}>
+    <button class="btn btn-full" onclick="openInviteModal()" {% if not friends_list %}disabled style="opacity:.35;"{% endif %}>
       {{ t.lobby_invite_friends }}
     </button>
-
-    <form action="/lobby/{{ code }}/start" method="POST">
+    <form action="/lobby/{{ code }}/start" method="POST" id="start-form">
       <button type="submit" class="btn btn-primary btn-full" id="start-btn" {% if players|length < 2 %}disabled{% endif %}>
         {{ t.lobby_start }}
       </button>
     </form>
-    <p style="font-size:.75rem;color:var(--grey-5);" id="min-hint">
-      {% if players|length < 2 %}{{ t.lobby_min_players }}{% endif %}
-    </p>
+    <p style="font-size:.75rem;color:var(--grey-5);" id="min-hint">{% if players|length < 2 %}{{ t.lobby_min_players }}{% endif %}</p>
   </div>
   {% endif %}
 
-  <div style="margin-top:16px;">
-    <a href="/home" class="btn btn-ghost btn-sm">{{ t.lobby_leave }}</a>
-  </div>
+  <div style="margin-top:16px;"><a href="/home" class="btn btn-ghost btn-sm">{{ t.lobby_leave }}</a></div>
 </div>
 
 <!-- Invite modal -->
@@ -88,14 +79,12 @@
   <div class="modal-box">
     <div class="modal-title">{{ t.lobby_invite_friends }}</div>
     {% if friends_list %}
-    <div id="invite-list">
+    <div>
       {% for f in friends_list %}
-      <div class="invite-item" id="invite-row-{{ f.id }}">
+      <div class="invite-item" id="inv-{{ f.id }}">
         <div class="invite-avatar">{{ f.name[0].upper() }}</div>
-        <div class="invite-name">{{ f.name }}</div>
-        <button class="btn btn-primary btn-sm" onclick="sendInvite('{{ f.id }}', this)">
-          {{ t.friends_invite }}
-        </button>
+        <div style="flex:1;font-size:.9rem;">{{ f.name }}</div>
+        <button class="btn btn-primary btn-sm" onclick="sendInvite('{{ f.id }}', this)">{{ t.friends_invite }}</button>
       </div>
       {% endfor %}
     </div>
@@ -108,23 +97,32 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Supabase Realtime JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-const CODE     = '{{ code }}';
-const IS_HOST  = {{ 'true' if is_host else 'false' }};
-const T_COPIED = {{ t.lobby_copied | tojson }};
-const T_COPY   = {{ t.lobby_copy   | tojson }};
-const T_SENT   = {{ t.lobby_invite_sent | tojson }};
-const T_HOST   = {{ t.lobby_host_tag | tojson }};
-const T_WAIT   = {{ t.lobby_waiting_players | tojson }};
-const T_START  = {{ t.lobby_start | tojson }};
-const T_MIN    = {{ t.lobby_min_players | tojson }};
-let lastCount  = {{ players|length }};
+const CODE      = '{{ code }}';
+const LOBBY_ID  = '{{ lobby_id }}';
+const IS_HOST   = {{ 'true' if is_host else 'false' }};
+const SB_URL    = '{{ config.get("SUPABASE_URL", "") if config else "" }}';
+const SB_KEY    = '';  // anon key injected below
+
+// Translations
+const T = {
+  copied:      {{ t.lobby_copied    | tojson }},
+  copyHint:    {{ t.lobby_copy      | tojson }},
+  invSent:     {{ t.lobby_invite_sent | tojson }},
+  host:        {{ t.lobby_host_tag  | tojson }},
+  waiting:     {{ t.lobby_waiting_players | tojson }},
+  start:       {{ t.lobby_start     | tojson }},
+  minPlayers:  {{ t.lobby_min_players | tojson }},
+};
+
+let playerCount = {{ players|length }};
 
 function copyCode() {
-  navigator.clipboard.writeText(CODE).then(() => {
-    document.getElementById('copy-hint').textContent = T_COPIED;
-    setTimeout(() => document.getElementById('copy-hint').textContent = T_COPY, 2000);
-  });
+  navigator.clipboard.writeText(CODE).catch(() => {});
+  document.getElementById('copy-hint').textContent = T.copied;
+  setTimeout(() => document.getElementById('copy-hint').textContent = T.copyHint, 2000);
 }
 
 function openInviteModal()  { document.getElementById('invite-modal').classList.add('open'); }
@@ -132,51 +130,101 @@ function closeInviteModal() { document.getElementById('invite-modal').classList.
 
 async function sendInvite(friendId, btn) {
   btn.disabled = true;
-  await fetch(`/lobby/${CODE}/invite/${friendId}`, {method:'POST'});
-  btn.textContent = T_SENT;
-  btn.style.background = 'var(--grey-3)';
-  btn.style.borderColor = 'var(--grey-3)';
+  await fetch(`/lobby/${CODE}/invite/${friendId}`, { method: 'POST' });
+  btn.textContent = T.invSent;
   btn.style.color = '#27ae60';
 }
 
-function renderPlayers(players) {
+function renderPlayers(names) {
   const list = document.getElementById('player-list');
+  const isNew = names.length > playerCount;
   let html = '';
-  players.forEach((name, i) => {
-    html += `<div class="player-slot">
-      <div class="player-avatar">${name[0].toUpperCase()}</div>
+  names.forEach((name, i) => {
+    html += `<div class="player-slot${isNew && i === names.length - 1 ? ' new-player' : ''}">
+      <div class="player-avatar">${(name||'?')[0].toUpperCase()}</div>
       <div style="font-size:.9rem;">${name}</div>
-      ${i===0 ? `<span class="host-tag">${T_HOST}</span>` : ''}
+      ${i === 0 ? `<span class="host-tag">${T.host}</span>` : ''}
     </div>`;
   });
-  for (let i = players.length; i < 6; i++) {
+  for (let i = names.length; i < 6; i++) {
     html += `<div class="player-slot empty">
       <div class="player-avatar" style="background:transparent;border-style:dashed;">–</div>
-      <div style="font-size:.85rem;color:var(--grey-4);">${T_WAIT}</div>
+      <div style="font-size:.85rem;color:var(--grey-4);">${T.waiting}</div>
     </div>`;
   }
   list.innerHTML = html;
+  if (isNew) { try { KrimiSound.playClick(); } catch(e){} }
+  playerCount = names.length;
+
   if (IS_HOST) {
     const btn  = document.getElementById('start-btn');
     const hint = document.getElementById('min-hint');
-    if (btn)  btn.disabled = players.length < 2;
-    if (hint) hint.textContent = players.length < 2 ? T_MIN : '';
+    if (btn)  btn.disabled = names.length < 2;
+    if (hint) hint.textContent = names.length < 2 ? T.minPlayers : '';
   }
-  if (players.length > lastCount) {
-    try { KrimiSound.playClick(); } catch(e){}
-  }
-  lastCount = players.length;
 }
 
-async function pollLobby() {
+// ── Realtime via Supabase JS ──────────────────────────────────────────────
+async function initRealtime() {
+  if (!LOBBY_ID || LOBBY_ID === 'None' || LOBBY_ID === '') {
+    // Fallback polling if no lobby_id
+    fallbackPoll();
+    return;
+  }
+
+  try {
+    // Fetch anon key from meta tag set by server
+    const meta = document.querySelector('meta[name="sb-key"]');
+    const key  = meta ? meta.content : '';
+    if (!key) { fallbackPoll(); return; }
+
+    const url  = document.querySelector('meta[name="sb-url"]').content;
+    const sb   = supabase.createClient(url, key);
+
+    // Subscribe to lobby_players changes
+    sb.channel(`lobby-${LOBBY_ID}`)
+      .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'lobby_players',
+          filter: `lobby_id=eq.${LOBBY_ID}`
+        }, async () => {
+          // Fetch fresh player list
+          const { data } = await sb.from('profiles')
+            .select('username')
+            .in('id', await getLobbyPlayerIds(sb));
+          if (data) renderPlayers(data.map(r => r.username));
+        })
+      // Subscribe to lobby status (playing → redirect)
+      .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'lobbies',
+          filter: `id=eq.${LOBBY_ID}`
+        }, (payload) => {
+          if (payload.new && payload.new.status === 'playing') {
+            window.location.href = `/game/${CODE}`;
+          }
+        })
+      .subscribe();
+  } catch(e) {
+    console.warn('Realtime unavailable, falling back to polling:', e);
+    fallbackPoll();
+  }
+}
+
+async function getLobbyPlayerIds(sb) {
+  const { data } = await sb.from('lobby_players')
+    .select('user_id').eq('lobby_id', LOBBY_ID);
+  return (data || []).map(r => r.user_id);
+}
+
+async function fallbackPoll() {
   try {
     const res  = await fetch(`/api/lobby/${CODE}`);
     const data = await res.json();
     if (data.status === 'playing') { window.location.href = `/game/${CODE}`; return; }
     if (data.players && data.players.length > 0) renderPlayers(data.players);
   } catch(e){}
-  setTimeout(pollLobby, 3000);
+  setTimeout(fallbackPoll, 4000);
 }
-setTimeout(pollLobby, 2000);
+
+initRealtime();
 </script>
 {% endblock %}
