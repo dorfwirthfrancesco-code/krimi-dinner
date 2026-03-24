@@ -9,6 +9,7 @@
   .scenario-check { width:16px; height:16px; border-radius:50%; border:1px solid var(--grey-4); margin-left:auto; flex-shrink:0; position:relative; }
   .scenario-option:checked + .scenario-label .scenario-check { border-color:var(--white); }
   .scenario-option:checked + .scenario-label .scenario-check::after { content:''; position:absolute; inset:3px; background:var(--white); border-radius:50%; }
+  .free-badge { font-size:.55rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:2px 7px; border-radius:3px; background:var(--white); color:var(--black); margin-left:8px; vertical-align:middle; }
 </style>
 {% endblock %}
 {% block content %}
@@ -19,30 +20,64 @@
 </div>
 <form method="POST">
   <div style="margin-bottom:28px;">
-    <input class="scenario-option" type="radio" name="scenario" id="s1" value="orient" checked>
-    <label class="scenario-label fade-up delay-1" for="s1">
+
+    <!-- Das Herrenhaus Dunkelbach — kostenlos, spielbar -->
+    <input class="scenario-option" type="radio" name="scenario" id="s_dunkelbach" value="dunkelbach" checked>
+    <label class="scenario-label fade-up delay-1" for="s_dunkelbach">
       <div>
-        <div style="font-size:.9rem;font-weight:500;color:var(--white);">Mord im Orient-Express</div>
-        <div style="font-size:.75rem;color:var(--grey-5);">{{ t.genre_historical }} · 5–10 · 75 min · {{ t.create_owned }}</div>
+        <div style="font-size:.9rem;font-weight:500;color:var(--white);">
+          Das Herrenhaus Dunkelbach
+          <span class="free-badge">Kostenlos</span>
+        </div>
+        <div style="font-size:.75rem;color:var(--grey-5);margin-top:3px;">Thriller · 4–10 Spieler · 90–120 Min · Ein Mord, tausend Möglichkeiten</div>
       </div>
       <span class="scenario-check"></span>
     </label>
+
+    <!-- Weitere Szenarien gesperrt -->
     <div style="opacity:.3;pointer-events:none;">
-      <div class="scenario-label fade-up delay-2">
+      <div class="scenario-label fade-up delay-2" style="border-style:dashed;">
         <div>
           <div style="font-size:.9rem;font-weight:500;color:var(--white);">Das Venedig-Komplott</div>
-          <div style="font-size:.75rem;color:var(--grey-5);">{{ t.genre_classic }} · 4–8 · 90 min · <span style="color:var(--grey-6)">4,99 €</span></div>
+          <div style="font-size:.75rem;color:var(--grey-5);">Klassisch · 4–8 Spieler · 90 Min</div>
         </div>
-        <a href="/shop" class="btn btn-sm" style="margin-left:auto">{{ t.create_buy }}</a>
+        <a href="/shop" class="btn btn-sm" style="margin-left:auto;pointer-events:all;">{{ t.create_buy }}</a>
+      </div>
+    </div>
+    <div style="opacity:.3;pointer-events:none;">
+      <div class="scenario-label fade-up delay-3" style="border-style:dashed;">
+        <div>
+          <div style="font-size:.9rem;font-weight:500;color:var(--white);">Noir Downtown</div>
+          <div style="font-size:.75rem;color:var(--grey-5);">Hardboiled · 4–8 Spieler · 90 Min</div>
+        </div>
+        <a href="/shop" class="btn btn-sm" style="margin-left:auto;pointer-events:all;">{{ t.create_buy }}</a>
       </div>
     </div>
   </div>
+
   <div class="form-group fade-up delay-3">
     <label>{{ t.create_max_players }}</label>
     <select name="max_players">
-      <option>3</option><option>4</option><option selected>6</option><option>8</option><option>10</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6" selected>6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
     </select>
   </div>
+
+  <div class="card fade-up delay-3" style="margin-bottom:20px;padding:16px 20px;">
+    <div style="font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-5);margin-bottom:10px;">Host-Vorbereitung</div>
+    <div style="font-size:.82rem;color:var(--grey-6);line-height:1.6;">
+      Vor dem Spiel verstecke einen Zettel mit folgendem Text im Badezimmer (hinter dem Spiegel):<br>
+      <span style="color:var(--white);font-style:italic;">"Der Baron sagte mir: Wer als erstes nach der Bibliothek fragt, hat etwas zu verbergen."</span>
+      <br><br>
+      Stelle außerdem Wein oder Sekt bereit — das ist Teil des Spiels.
+    </div>
+  </div>
+
   <button type="submit" class="btn btn-primary btn-full fade-up delay-4">{{ t.create_btn }}</button>
 </form>
 {% endblock %}
