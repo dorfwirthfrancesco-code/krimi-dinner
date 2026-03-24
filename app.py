@@ -322,12 +322,11 @@ def home():
 def shop():
     t = get_t(session.get('lang', 'en'))
     items = [
-        {'name': 'Das Venedig-Komplott',   'genre': t['genre_classic'],    'players': '4–8',  'duration': '90 min', 'price': '4.99', 'owned': False, 'tag': 'New'},
-        {'name': 'Mord im Orient-Express', 'genre': t['genre_historical'], 'players': '5–10', 'duration': '75 min', 'price': '',     'owned': True,  'tag': ''},
-        {'name': 'Die Rache des Butlers',  'genre': t['genre_cozy'],       'players': '3–6',  'duration': '60 min', 'price': '2.99', 'owned': False, 'tag': ''},
-        {'name': 'Noir Downtown',          'genre': t['genre_hardboiled'], 'players': '4–8',  'duration': '90 min', 'price': '4.99', 'owned': False, 'tag': ''},
-        {'name': 'Schloss Dunkelberg',     'genre': t['genre_gothic'],     'players': '5–9',  'duration': '120 min','price': '5.99', 'owned': False, 'tag': 'New'},
-        {'name': 'Cocktails & Leichen',    'genre': t['genre_comedy'],     'players': '4–7',  'duration': '60 min', 'price': '2.99', 'owned': False, 'tag': ''},
+        {'name': 'Das Venedig-Komplott',   'genre': t['genre_classic'],    'players': '4–8',  'duration': '90 min',  'price': '4.99', 'owned': False, 'tag': 'New'},
+        {'name': 'Die Rache des Butlers',  'genre': t['genre_cozy'],       'players': '3–6',  'duration': '60 min',  'price': '2.99', 'owned': False, 'tag': ''},
+        {'name': 'Noir Downtown',          'genre': t['genre_hardboiled'], 'players': '4–8',  'duration': '90 min',  'price': '4.99', 'owned': False, 'tag': ''},
+        {'name': 'Schloss Dunkelberg',     'genre': t['genre_gothic'],     'players': '5–9',  'duration': '120 min', 'price': '5.99', 'owned': False, 'tag': 'New'},
+        {'name': 'Cocktails & Leichen',    'genre': t['genre_comedy'],     'players': '4–7',  'duration': '60 min',  'price': '2.99', 'owned': False, 'tag': ''},
     ]
     return render_template('shop.html', items=items)
 

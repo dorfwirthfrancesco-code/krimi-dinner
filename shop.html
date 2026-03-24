@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ t.shop_title }} – Krimi Dinner{% endblock %}
+{% block content %}
+<div class="page-header fade-up">
+  <div class="eyebrow">{{ t.shop_eyebrow }}</div>
+  <h1>{{ t.shop_title }}</h1>
+  <p>{{ t.shop_sub }}</p>
+</div>
+<div class="shop-grid">
+
+  <!-- Das Herrenhaus Dunkelbach — kostenlos, spielbar -->
+  <div class="shop-item fade-up" style="animation-delay:0s; border-color:var(--grey-3);">
+    <div class="shop-item-top">
+      <div>
+        <div class="shop-item-name">Das Herrenhaus Dunkelbach</div>
+        <div class="shop-item-genre">Thriller · 1923</div>
+      </div>
+      <span class="tag tag-white">Kostenlos</span>
+    </div>
+    <div class="shop-item-meta">
+      <div class="shop-meta-item">{{ t.shop_players }}<strong>4–10</strong></div>
+      <div class="shop-meta-item">{{ t.shop_duration }}<strong>90–120 min</strong></div>
+    </div>
+    <div style="font-size:.8rem;color:var(--grey-5);margin-bottom:14px;line-height:1.5;">
+      Ein Sommerabend, 1923. Baron Aldric von Dunkelbach lädt seine engsten Vertrauten ein. Am Morgen danach: ein Toter.
+    </div>
+    <div class="shop-price shop-price-owned">{{ t.shop_owned }}</div>
+    <button class="btn btn-primary btn-sm btn-full" onclick="window.location='/create-game'">{{ t.shop_play }}</button>
+  </div>
+
+  {% for item in items %}
+  <div class="shop-item fade-up" style="animation-delay:{{ (loop.index) * 0.07 }}s">
+    <div class="shop-item-top">
+      <div>
+        <div class="shop-item-name">{{ item.name }}</div>
+        <div class="shop-item-genre">{{ item.genre }}</div>
+      </div>
+      {% if item.tag %}<span class="tag {% if item.tag=='New' or item.tag=='Neu' %}tag-white{% endif %}">{{ item.tag }}</span>{% endif %}
+    </div>
+    <div class="shop-item-meta">
+      <div class="shop-meta-item">{{ t.shop_players }}<strong>{{ item.players }}</strong></div>
+      <div class="shop-meta-item">{{ t.shop_duration }}<strong>{{ item.duration }}</strong></div>
+    </div>
+    <div class="shop-price">{{ item.price }} €</div>
+    <button class="btn btn-primary btn-sm btn-full">{{ t.shop_buy }}</button>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
