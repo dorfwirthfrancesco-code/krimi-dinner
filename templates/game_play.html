@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+{% block title %}Spiel läuft – Krimi Dinner{% endblock %}
+{% block head %}
+<style>
+  .game-layout { display:grid; grid-template-columns:1fr 320px; gap:16px; max-width:1100px; margin:0 auto; }
+  @media(max-width:800px){ .game-layout{grid-template-columns:1fr;} .game-sidebar{order:-1;} }
+
+  /* Role Card */
+  .role-card { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:10px; overflow:hidden; margin-bottom:16px; }
+  .role-card-header { padding:20px 24px 12px; border-bottom:1px solid var(--grey-2); }
+  .role-tag { font-size:.62rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--grey-5); margin-bottom:6px; }
+  .role-name { font-family:'DM Serif Display',serif; font-size:1.5rem; color:var(--white); }
+  .role-card-body { padding:20px 24px; }
+  .role-section-title { font-size:.62rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--grey-5); margin:16px 0 6px; }
+  .role-text { font-size:.9rem; color:var(--grey-6); line-height:1.6; }
+  .role-secret { background:rgba(192,57,43,.08); border:1px solid rgba(192,57,43,.2); border-radius:6px; padding:14px; }
+  .role-secret .role-text { color:#e74c3c; }
+  .role-ability { background:var(--grey-2); border-radius:6px; padding:14px; }
+  .murderer-reveal { background:rgba(192,57,43,.12); border:2px solid #c0392b; border-radius:8px; padding:16px; margin-top:16px; display:none; }
+  .murderer-reveal.show { display:block; animation:fadeUp .5s ease; }
+  .murderer-reveal h3 { color:#e74c3c; font-family:'DM Serif Display',serif; margin-bottom:8px; }
+
+  /* Phase indicator */
+  .phase-bar { display:flex; gap:4px; margin-bottom:20px; }
+  .phase-dot { flex:1; height:4px; border-radius:2px; background:var(--grey-3); transition:background .3s; }
+  .phase-dot.done { background:var(--white); }
+  .phase-dot.active { background:#27ae60; }
+  .phase-name { font-size:.72rem; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--grey-5); margin-bottom:16px; }
+
+  /* Clues */
+  .clue-item { padding:14px; border:1px solid var(--grey-2); border-radius:8px; margin-bottom:10px; background:var(--grey-1); cursor:pointer; transition:border-color .2s; }
+  .clue-item:hover { border-color:var(--grey-4); }
+  .clue-item.new { border-color:#27ae60; animation:fadeUp .4s ease; }
+  .clue-name { font-size:.82rem; font-weight:500; color:var(--white); margin-bottom:4px; }
+  .clue-text { font-size:.78rem; color:var(--grey-5); line-height:1.5; display:none; }
+  .clue-item.open .clue-text { display:block; }
+  .clue-count { font-size:.65rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:12px; }
+
+  /* Events/Feed */
+  .event-feed { display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; }
+  .event-item { padding:10px 14px; border-radius:6px; font-size:.8rem; line-height:1.5; }
+  .event-broadcast { background:var(--grey-2); color:var(--grey-6); }
+  .event-private   { background:rgba(39,174,96,.1); border:1px solid rgba(39,174,96,.2); color:#27ae60; }
+  .event-warning   { background:rgba(192,57,43,.1); border:1px solid rgba(192,57,43,.2); color:#e74c3c; }
+  .event-task      { background:rgba(52,152,219,.1); border:1px solid rgba(52,152,219,.2); color:#3498db; }
+  .event-atmosphere{ background:var(--grey-1); border:1px solid var(--grey-2); color:var(--grey-6); font-style:italic; }
+
+  /* Actions */
+  .actions-grid { display:flex; flex-wrap:wrap; gap:8px; }
+  .ability-used { opacity:.35; pointer-events:none; text-decoration:line-through; }
+
+  /* Players */
+  .player-list-game { display:flex; flex-direction:column; gap:6px; }
+  .player-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--grey-2); border-radius:6px; cursor:pointer; transition:background .2s; }
+  .player-row:hover { background:var(--grey-3); }
+  .player-avatar-sm { width:28px; height:28px; border-radius:50%; background:var(--grey-3); display:flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; }
+  .player-name-sm { font-size:.85rem; color:var(--white); flex:1; }
+  .suspect-btn { font-size:.6rem; padding:3px 8px; }
+
+  /* Voting */
+  .vote-screen { display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:200; align-items:center; justify-content:center; }
+  .vote-screen.show { display:flex; }
+  .vote-box { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:12px; padding:32px; max-width:400px; width:90%; }
+  .vote-title { font-family:'DM Serif Display',serif; font-size:1.4rem; margin-bottom:8px; }
+  .vote-sub { color:var(--grey-5); font-size:.85rem; margin-bottom:24px; }
+  .vote-option { display:block; padding:12px 16px; border:1px solid var(--grey-2); border-radius:6px; margin-bottom:8px; cursor:pointer; text-align:left; background:var(--grey-2); color:var(--white); font-size:.9rem; transition:border-color .2s; width:100%; }
+  .vote-option:hover { border-color:var(--white); }
+  .vote-option.selected { border-color:#27ae60; background:rgba(39,174,96,.1); }
+
+  /* Sidebar */
+  .game-sidebar-section { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:8px; padding:16px; margin-bottom:12px; }
+  .sidebar-title { font-size:.65rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--grey-5); margin-bottom:12px; }
+
+  /* Host controls */
+  .host-panel { background:rgba(192,57,43,.06); border:1px solid rgba(192,57,43,.2); border-radius:8px; padding:16px; margin-bottom:12px; }
+  .host-panel-title { font-size:.65rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#e74c3c; margin-bottom:12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <!-- Phase bar -->
+  <div class="phase-bar">
+    {% for i in range(5) %}
+    <div class="phase-dot {% if i < phase %}done{% elif i == phase %}active{% endif %}"></div>
+    {% endfor %}
+  </div>
+  <div class="phase-name" id="phase-name">
+    {% set phase_names = ['Ankunft & Vorstellung','Das Dinner','Der Mord','Die Ermittlung','Die Abrechnung'] %}
+    Phase {{ phase }}: {{ phase_names[phase] if phase < phase_names|length else 'Abrechnung' }}
+  </div>
+</div>
+
+<div class="game-layout">
+  <!-- Main column -->
+  <div>
+
+    {% if role_card %}
+    <!-- Role Card -->
+    <div class="role-card fade-up">
+      <div class="role-card-header">
+        <div class="role-tag">Deine Rolle</div>
+        <div class="role-name">{{ role_card.role_name }}</div>
+      </div>
+      <div class="role-card-body">
+        <div class="role-section-title">Charakter</div>
+        <div class="role-text">{{ role_card.intro }}</div>
+
+        <div class="role-section-title">Erscheinungsbild</div>
+        <div class="role-text">{{ role_card.appearance }}</div>
+
+        <div class="role-section-title" style="color:#e74c3c;">Dein Geheimnis</div>
+        <div class="role-secret"><div class="role-text">{{ role_card.secret }}</div></div>
+
+        <div class="role-section-title">Startinformation</div>
+        <div class="role-text">{{ role_card.starting_knowledge }}</div>
+
+        <div class="role-section-title">Deine Fähigkeit: {{ role_card.ability_name }}</div>
+        <div class="role-ability"><div class="role-text">{{ role_card.ability_desc }}</div></div>
+
+        <div class="role-section-title">Siegbedingung</div>
+        <div class="role-text">{{ role_card.win_condition }}</div>
+
+        {% if role_card.secret_lover_role %}
+        <div class="role-section-title" style="color:#e91e63;">Geheime Affäre</div>
+        <div class="role-ability"><div class="role-text" style="color:#e91e63;">Dein/e Geliebte/r ist: <strong>{{ role_card.secret_lover_role }}</strong>. Nur ihr zwei wisst das. Niemand sonst darf es erfahren.</div></div>
+        {% endif %}
+
+        {% if role_card.barons_feared_person %}
+        <div class="role-section-title" style="color:#3498db;">Brief des Barons</div>
+        <div class="role-ability"><div class="role-text" style="color:#3498db;">Der Baron fürchtete: <strong>{{ role_card.barons_feared_person }}</strong>. Das steht in deinem Brief. Ob das der Mörder ist — weißt du nicht.</div></div>
+        {% endif %}
+
+        {% if role_card.surveillance_target %}
+        <div class="role-section-title" style="color:#f39c12;">Observationsakte</div>
+        <div class="role-ability"><div class="role-text" style="color:#f39c12;">Du hast eine Akte über: <strong>{{ role_card.surveillance_target }}</strong>. Diese Person hat Geheimnisse.</div></div>
+        {% endif %}
+
+        <!-- Murderer reveal (hidden, revealed after 10 min) -->
+        {% if role_card.is_murderer %}
+        <div class="murderer-reveal" id="murderer-reveal">
+          <h3>⚠️ Du bist der Mörder</h3>
+          <div class="role-text">{{ role_card.murderer_motive }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Abilities -->
+    <div class="game-sidebar-section fade-up delay-1">
+      <div class="sidebar-title">Aktionen & Fähigkeiten</div>
+      <div class="actions-grid" id="actions-grid">
+        {% if role_card.role_name %}
+        <button class="btn btn-sm" onclick="useAbility('use_letter')" id="ability-use_letter">Brief öffnen</button>
+        <button class="btn btn-sm" onclick="useAbility('call_interrogation')" id="ability-call_interrogation">Verhör einberufen</button>
+        <button class="btn btn-sm" onclick="useAbility('steal_will')" id="ability-steal_will">Testament stehlen</button>
+        <button class="btn btn-sm" onclick="useAbility('reveal_truth')" id="ability-reveal_truth">Wahrheit enthüllen</button>
+        {% endif %}
+
+        {% if phase == 4 %}
+        <button class="btn btn-primary btn-sm" onclick="showVote()">Abstimmen</button>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Event Feed -->
+    <div class="game-sidebar-section fade-up delay-2">
+      <div class="sidebar-title">Ereignisse & Nachrichten</div>
+      <div class="event-feed" id="event-feed">
+        <div class="event-item event-broadcast">Das Spiel beginnt. Bleibt in eurer Rolle.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar -->
+  <div class="game-sidebar">
+
+    {% if is_host %}
+    <!-- Host Controls -->
+    <div class="host-panel">
+      <div class="host-panel-title">Host-Steuerung</div>
+      <button class="btn btn-sm btn-full" style="margin-bottom:8px;" onclick="advancePhase()">
+        Nächste Phase →
+      </button>
+      <button class="btn btn-sm btn-full" onclick="window.location='/game/{{ code }}/resolve'">
+        Spiel auflösen
+      </button>
+    </div>
+    {% endif %}
+
+    <!-- Clues -->
+    <div class="game-sidebar-section">
+      <div class="sidebar-title">Hinweise</div>
+      <div class="clue-count" id="clue-count">{{ clues|length }} Hinweis{% if clues|length != 1 %}e{% endif %}</div>
+      <div id="clue-list">
+        {% for clue in clues %}
+        <div class="clue-item" onclick="this.classList.toggle('open')">
+          <div class="clue-name">{{ clue.name }}</div>
+          <div class="clue-text">{{ clue.text }}</div>
+        </div>
+        {% endfor %}
+        {% if not clues %}
+        <div style="font-size:.8rem;color:var(--grey-5);font-style:italic;">Noch keine Hinweise. Sprich mit anderen Spielern.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Players -->
+    <div class="game-sidebar-section">
+      <div class="sidebar-title">Spieler ({{ player_count }})</div>
+      <div class="player-list-game" id="player-list-game">
+        <div style="font-size:.78rem;color:var(--grey-5);">Lade Spielerliste...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Vote overlay -->
+<div class="vote-screen" id="vote-screen">
+  <div class="vote-box">
+    <div class="vote-title">Die Abstimmung</div>
+    <div class="vote-sub">Wer ist eurer Meinung nach der Mörder?</div>
+    <div id="vote-options"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="submitVote()">Stimme abgeben</button>
+    <button class="btn btn-ghost btn-sm btn-full" style="margin-top:8px;" onclick="hideVote()">Abbrechen</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const CODE    = '{{ code }}';
+const GAME_ID = '{{ game_id }}';
+const IS_HOST = {{ 'true' if is_host else 'false' }};
+const IS_MURDERER = {{ 'true' if role_card and role_card.is_murderer else 'false' }};
+let   lastEventTime = new Date(0).toISOString();
+let   selectedVote  = null;
+let   gameStartTime = Date.now();
+let   murdererRevealed = false;
+const MURDERER_REVEAL_DELAY = 10 * 60 * 1000; // 10 minutes
+
+// ── Murderer reveal countdown ─────────────────────────────────────────────
+if (IS_MURDERER) {
+  function checkMurdererReveal() {
+    if (murdererRevealed) return;
+    const elapsed = Date.now() - gameStartTime;
+    if (elapsed >= MURDERER_REVEAL_DELAY) {
+      document.getElementById('murderer-reveal')?.classList.add('show');
+      murdererRevealed = true;
+      addEvent('⚠️ Du bist jetzt der Mörder. Lies dein Motiv. Handle entsprechend.', 'warning');
+    } else {
+      const remaining = Math.ceil((MURDERER_REVEAL_DELAY - elapsed) / 1000);
+      if (remaining % 60 === 0) {
+        addEvent(`⏱ Du erhältst deine geheime Rolle in ${remaining/60} Minute(n)...`, 'private');
+      }
+    }
+  }
+  setInterval(checkMurdererReveal, 10000);
+}
+
+// ── Event polling ─────────────────────────────────────────────────────────
+function addEvent(text, type = 'broadcast') {
+  const feed = document.getElementById('event-feed');
+  const el   = document.createElement('div');
+  el.className = `event-item event-${type}`;
+  el.textContent = text;
+  feed.insertBefore(el, feed.firstChild);
+  // Limit to 30 events
+  while (feed.children.length > 30) feed.removeChild(feed.lastChild);
+}
+
+async function pollEvents() {
+  try {
+    const res  = await fetch(`/api/game/${CODE}/events?since=${encodeURIComponent(lastEventTime)}`);
+    const data = await res.json();
+
+    // Update phase
+    const phaseName = ['Ankunft & Vorstellung','Das Dinner','Der Mord','Die Ermittlung','Die Abrechnung'];
+    if (data.phase !== undefined) {
+      document.getElementById('phase-name').textContent = `Phase ${data.phase}: ${phaseName[data.phase] || ''}`;
+      // Update phase dots
+      document.querySelectorAll('.phase-dot').forEach((d, i) => {
+        d.className = 'phase-dot ' + (i < data.phase ? 'done' : i === data.phase ? 'active' : '');
+      });
+      if (data.phase === 4) {
+        document.getElementById('vote-screen') && addEvent('⚖️ DIE ABSTIMMUNG BEGINNT. Benutze den Abstimmen-Button.', 'warning');
+      }
+    }
+
+    // Process events
+    for (const evt of (data.events || [])) {
+      const content = typeof evt.content === 'string' ? JSON.parse(evt.content) : evt.content;
+      lastEventTime = evt.created_at;
+
+      if (evt.event_type === 'message') {
+        addEvent(content.text || JSON.stringify(content), evt.to_player ? 'private' : 'broadcast');
+      } else if (evt.event_type === 'clue_revealed') {
+        addEvent(`🔍 Ein Hinweis wurde enthüllt: ${content.clue}`, 'private');
+        fetchNewClues();
+      } else if (evt.event_type === 'task') {
+        addEvent(`📋 AUFGABE: ${content.instruction}`, 'task');
+      } else if (evt.event_type === 'atmosphere') {
+        addEvent(content.text, 'atmosphere');
+      } else if (evt.event_type === 'interrogation') {
+        addEvent('🔦 Inspektor Wahl ruft ein offizielles Verhör ein!', 'warning');
+      } else if (evt.event_type === 'warning') {
+        addEvent(content.text || '⚠️ Warnung', 'warning');
+      }
+    }
+  } catch(e) { console.warn('Poll error:', e); }
+  setTimeout(pollEvents, 4000);
+}
+
+async function fetchNewClues() {
+  try {
+    const res  = await fetch(`/api/game/${CODE}/clues`);
+    const data = await res.json();
+    const list = document.getElementById('clue-list');
+    const count = document.getElementById('clue-count');
+    if (data.clues) {
+      list.innerHTML = data.clues.map(c =>
+        `<div class="clue-item new" onclick="this.classList.toggle('open')">
+          <div class="clue-name">${c.name}</div>
+          <div class="clue-text">${c.text}</div>
+        </div>`
+      ).join('');
+      count.textContent = `${data.clues.length} Hinweis${data.clues.length !== 1 ? 'e' : ''}`;
+    }
+  } catch(e){}
+}
+
+// ── Voting ─────────────────────────────────────────────────────────────────
+let votePlayers = [];
+
+async function showVote() {
+  try {
+    const res  = await fetch(`/api/lobby/${CODE}`);
+    const data = await res.json();
+    votePlayers = data.players || [];
+    const opts = document.getElementById('vote-options');
+    opts.innerHTML = votePlayers.map((name, i) =>
+      `<button class="vote-option" onclick="selectVote(this, '${name}')" data-name="${name}">${name}</button>`
+    ).join('');
+  } catch(e){}
+  document.getElementById('vote-screen').classList.add('show');
+}
+
+function hideVote() { document.getElementById('vote-screen').classList.remove('show'); }
+
+function selectVote(btn, name) {
+  document.querySelectorAll('.vote-option').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedVote = name;
+}
+
+async function submitVote() {
+  if (!selectedVote) return;
+  await fetch(`/game/${CODE}/vote`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({accused_id: selectedVote})
+  });
+  hideVote();
+  addEvent(`✅ Du hast für ${selectedVote} gestimmt.`, 'private');
+}
+
+// ── Abilities ──────────────────────────────────────────────────────────────
+async function useAbility(ability) {
+  const btn = document.getElementById(`ability-${ability}`);
+  if (btn && btn.classList.contains('ability-used')) return;
+
+  const res  = await fetch(`/api/game/${CODE}/use-ability`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ability})
+  });
+  const data = await res.json();
+
+  if (data.ok) {
+    if (btn) btn.classList.add('ability-used');
+    addEvent(`✅ Fähigkeit genutzt: ${ability}`, 'private');
+    if (data.message) addEvent(data.message, 'private');
+  } else {
+    addEvent(`❌ ${data.error || 'Fähigkeit nicht verfügbar'}`, 'warning');
+  }
+}
+
+// ── Host: Advance phase ────────────────────────────────────────────────────
+async function advancePhase() {
+  const res  = await fetch(`/game/${CODE}/advance-phase`, {method:'POST'});
+  const data = await res.json();
+  if (data.ok) addEvent(`📢 Phase ${data.new_phase} gestartet`, 'atmosphere');
+}
+
+// ── Load player list ───────────────────────────────────────────────────────
+async function loadPlayers() {
+  try {
+    const res  = await fetch(`/api/lobby/${CODE}`);
+    const data = await res.json();
+    const list = document.getElementById('player-list-game');
+    if (data.players) {
+      list.innerHTML = data.players.map(name =>
+        `<div class="player-row">
+          <div class="player-avatar-sm">${name[0]?.toUpperCase()}</div>
+          <div class="player-name-sm">${name}</div>
+        </div>`
+      ).join('');
+    }
+  } catch(e){}
+}
+
+// Start
+loadPlayers();
+setTimeout(pollEvents, 1000);
+</script>
+{% endblock %}

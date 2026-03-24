@@ -1,6 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 from functools import wraps
 from translations import get_t, SUPPORTED_LANGS
+from game_engine import (assign_roles, get_role_card, get_initial_clues,
+                         check_win_conditions, get_ending_text,
+                         get_physical_tasks_for_phase, get_atmosphere_message)
 import os, random, string, json
 import urllib.request, urllib.error
 
@@ -544,7 +547,8 @@ def lobby_start(code):
         lb = sb_get('lobbies', f'id=eq.{lobby_id}&select=host_id', token) or []
         if lb and lb[0]['host_id'] == uid:
             sb_patch('lobbies', f'id=eq.{lobby_id}', {'status': 'playing'}, token)
-    return redirect(url_for('game', code=code))
+    # Host goes to setup, others go to game_play via polling
+    return redirect(url_for('game_setup', code=code))
 
 @app.route('/lobby/<code>/invite/<friend_id>', methods=['POST'])
 @login_required
@@ -663,6 +667,334 @@ def settings():
         return redirect(url_for('settings'))
     s = session.get('settings', {'sound':'on','music':'on','notifications':'on','language': session.get('lang','en')})
     return render_template('settings.html', settings=s)
+
+# ── Game Routes ───────────────────────────────────────────────────────────────
+
+@app.route('/game/<code>/setup')
+@login_required
+def game_setup(code):
+    """Host starts the scenario — assigns roles, sends role cards."""
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    lobby_id = session.get('lobby_id', '')
+
+    if not SB_OK or not lobby_id:
+        return redirect(url_for('game', code=code))
+
+    # Get players in lobby
+    lp = sb_get('lobby_players', f'lobby_id=eq.{lobby_id}&select=user_id', token) or []
+    player_ids = [r['user_id'] for r in lp]
+
+    if not player_ids:
+        return redirect(url_for('lobby', code=code))
+
+    lang = session.get('lang', 'de')
+
+    # Assign roles
+    assignments = assign_roles('dunkelbach', player_ids, lang)
+
+    # Create game session in DB
+    gs = sb_post('game_sessions', {
+        'lobby_id': lobby_id,
+        'scenario': 'dunkelbach',
+        'phase': 0,
+        'state': json.dumps({'assignments': {k: {kk: vv for kk, vv in v.items() if kk != 'blackmail_targets'} for k, v in assignments.items()}, 'votes': {}, 'events': []})
+    }, token)
+
+    if not gs:
+        return redirect(url_for('game', code=code))
+
+    game_id = gs[0]['id'] if isinstance(gs, list) else gs.get('id')
+    session['game_id'] = game_id
+
+    # Store role assignments in player_roles table
+    for pid, assignment in assignments.items():
+        role_card = get_role_card(pid, assignments, 'dunkelbach', lang)
+        initial_clues = get_initial_clues(pid, assignments, 'dunkelbach', lang)
+        sb_post('player_roles', {
+            'game_id': game_id,
+            'user_id': pid,
+            'role_key': assignment['role_key'],
+            'is_murderer': assignment.get('is_murderer', False),
+            'clues_received': json.dumps(initial_clues),
+            'actions_taken': json.dumps([]),
+            'role_card': json.dumps(role_card)
+        }, token)
+
+    return redirect(url_for('game_play', code=code))
+
+@app.route('/game/<code>/play')
+@login_required
+def game_play(code):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    game_id = session.get('game_id', '')
+
+    if not SB_OK or not game_id:
+        return render_template('game.html', code=code,
+            username=session.get('username','?'),
+            scenario='dunkelbach', role_card=None, clues=[])
+
+    # Get my role
+    my_role = sb_get('player_roles', f'game_id=eq.{game_id}&user_id=eq.{uid}&select=*', token) or []
+    role_card = json.loads(my_role[0]['role_card']) if my_role else None
+    clues = json.loads(my_role[0]['clues_received']) if my_role else []
+
+    # Get game session
+    gs = sb_get('game_sessions', f'id=eq.{game_id}&select=phase,state', token) or []
+    phase = gs[0]['phase'] if gs else 0
+    game_state = json.loads(gs[0]['state']) if gs else {}
+
+    # Check if host
+    lb = sb_get('lobbies', f'code=eq.{code}&select=host_id', token) or []
+    is_host = lb and lb[0]['host_id'] == uid
+
+    # Get all players for this game
+    all_roles = sb_get('player_roles', f'game_id=eq.{game_id}&select=user_id,role_key,is_murderer', token) or []
+    player_count = len(all_roles)
+
+    return render_template('game_play.html',
+        code=code,
+        game_id=game_id,
+        username=session.get('username','?'),
+        role_card=role_card,
+        clues=clues,
+        phase=phase,
+        is_host=is_host,
+        player_count=player_count,
+        game_state=game_state)
+
+@app.route('/game/<code>/advance-phase', methods=['POST'])
+@login_required
+def advance_phase(code):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    game_id = session.get('game_id', '')
+    lobby_id = session.get('lobby_id', '')
+
+    if not SB_OK or not game_id:
+        return jsonify({'ok': False})
+
+    # Only host can advance
+    lb = sb_get('lobbies', f'code=eq.{code}&select=host_id', token) or []
+    if not lb or lb[0]['host_id'] != uid:
+        return jsonify({'ok': False, 'error': 'Not host'})
+
+    gs = sb_get('game_sessions', f'id=eq.{game_id}&select=phase', token) or []
+    current_phase = gs[0]['phase'] if gs else 0
+    new_phase = min(current_phase + 1, 4)
+
+    sb_patch('game_sessions', f'id=eq.{game_id}', {'phase': new_phase}, token)
+
+    # Murderer reveal at phase 1, minute 10 — we set a flag
+    if new_phase == 1:
+        sb_patch('game_sessions', f'id=eq.{game_id}',
+                 {'state': json.dumps({'murderer_reveal_at': 600})}, token)
+
+    return jsonify({'ok': True, 'new_phase': new_phase})
+
+@app.route('/game/<code>/vote', methods=['POST'])
+@login_required
+def game_vote(code):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    game_id = session.get('game_id', '')
+    data = request.get_json() or {}
+    accused_id = data.get('accused_id', '')
+
+    if not SB_OK or not game_id or not accused_id:
+        return jsonify({'ok': False})
+
+    # Save vote
+    gs = sb_get('game_sessions', f'id=eq.{game_id}&select=state', token) or []
+    state = json.loads(gs[0]['state']) if gs else {}
+    state.setdefault('votes', {})[uid] = accused_id
+    sb_patch('game_sessions', f'id=eq.{game_id}', {'state': json.dumps(state)}, token)
+
+    return jsonify({'ok': True})
+
+@app.route('/game/<code>/resolve')
+@login_required
+def game_resolve(code):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    game_id = session.get('game_id', '')
+    lang = session.get('lang', 'de')
+
+    if not SB_OK or not game_id:
+        return redirect(url_for('home'))
+
+    gs = sb_get('game_sessions', f'id=eq.{game_id}&select=state,phase', token) or []
+    if not gs: return redirect(url_for('home'))
+
+    state = json.loads(gs[0]['state'])
+    votes = state.get('votes', {})
+
+    # Rebuild assignments from DB
+    all_roles = sb_get('player_roles', f'game_id=eq.{game_id}&select=*', token) or []
+    assignments = {}
+    player_names = {}
+    for r in all_roles:
+        assignments[r['user_id']] = {
+            'role_key': r['role_key'],
+            'is_murderer': r.get('is_murderer', False),
+            'is_wildcard': r['role_key'] == 'shadow',
+        }
+        p = sb_get('profiles', f'id=eq.{r["user_id"]}&select=username', token) or []
+        player_names[r['user_id']] = p[0]['username'] if p else '?'
+
+    result = check_win_conditions(state, assignments, votes, 'dunkelbach')
+    murderer_id = result.get('murderer_id', '')
+    murderer_name = player_names.get(murderer_id, '?')
+    murderer_role = assignments.get(murderer_id, {}).get('role_key', '?')
+
+    ending = get_ending_text(result['ending'], murderer_name, 'dunkelbach', lang)
+    winners = result.get('winners', [])
+    winner_names = [player_names.get(w, '?') for w in winners]
+
+    # Save game history for all players
+    for r in all_roles:
+        pid = r['user_id']
+        won = pid in winners
+        role_result = 'gewonnen' if won else 'verloren'
+        sb_post('game_history', {
+            'user_id': pid,
+            'scenario': 'dunkelbach',
+            'role': r['role_key'],
+            'result': role_result
+        }, token)
+
+    # All role reveals
+    role_reveals = []
+    for r in all_roles:
+        rc = json.loads(r.get('role_card') or '{}')
+        role_reveals.append({
+            'username': player_names.get(r['user_id'], '?'),
+            'role_name': rc.get('role_name', r['role_key']),
+            'was_murderer': r.get('is_murderer', False),
+            'secret': rc.get('secret', ''),
+            'won': r['user_id'] in winners,
+        })
+
+    return render_template('game_resolve.html',
+        code=code,
+        ending=ending,
+        winner_names=winner_names,
+        role_reveals=role_reveals,
+        murderer_name=murderer_name,
+        murderer_role=murderer_role)
+
+@app.route('/api/game/<code>/events')
+@login_required
+def api_game_events(code):
+    """Poll for new events/tasks/clues for this player."""
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    game_id = session.get('game_id', '')
+    since = request.args.get('since', '0')
+
+    if not SB_OK or not game_id:
+        return jsonify({'events': [], 'phase': 0})
+
+    # Get game events for this player (private) or broadcast (to_player null)
+    events = sb_get('game_events',
+        f'game_id=eq.{game_id}&select=*&created_at=gt.{since}&order=created_at.asc',
+        token) or []
+
+    my_events = [e for e in events
+                 if e.get('to_player') == uid or e.get('to_player') is None]
+
+    gs = sb_get('game_sessions', f'id=eq.{game_id}&select=phase', token) or []
+    phase = gs[0]['phase'] if gs else 0
+
+    return jsonify({
+        'events': my_events,
+        'phase': phase
+    })
+
+@app.route('/api/game/<code>/send-event', methods=['POST'])
+@login_required
+def api_send_event(code):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    game_id = session.get('game_id', '')
+    data = request.get_json() or {}
+
+    if not SB_OK or not game_id:
+        return jsonify({'ok': False})
+
+    sb_post('game_events', {
+        'game_id': game_id,
+        'event_type': data.get('type', 'message'),
+        'from_player': uid,
+        'to_player': data.get('to_player'),
+        'content': json.dumps(data.get('content', {}))
+    }, token)
+
+    return jsonify({'ok': True})
+
+@app.route('/api/game/<code>/use-ability', methods=['POST'])
+@login_required
+def use_ability(code):
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    game_id = session.get('game_id', '')
+    data = request.get_json() or {}
+    ability = data.get('ability')
+
+    if not SB_OK or not game_id:
+        return jsonify({'ok': False})
+
+    # Get player role
+    my_role = sb_get('player_roles', f'game_id=eq.{game_id}&user_id=eq.{uid}&select=*', token) or []
+    if not my_role:
+        return jsonify({'ok': False})
+
+    role_key = my_role[0]['role_key']
+    actions_taken = json.loads(my_role[0]['actions_taken'] or '[]')
+
+    if ability in actions_taken:
+        return jsonify({'ok': False, 'error': 'already_used'})
+
+    # Mark ability used
+    actions_taken.append(ability)
+    sb_patch('player_roles', f'game_id=eq.{game_id}&user_id=eq.{uid}',
+             {'actions_taken': json.dumps(actions_taken)}, token)
+
+    # Trigger effects
+    result = {'ok': True, 'message': ''}
+    lang = session.get('lang', 'de')
+
+    if ability == 'use_letter' and role_key == 'niece':
+        result['message'] = 'Dein Brief wurde geöffnet.' if lang == 'de' else 'Your letter was opened.'
+        # Send clue to all
+        sb_post('game_events', {
+            'game_id': game_id, 'event_type': 'clue_revealed',
+            'from_player': uid, 'to_player': None,
+            'content': json.dumps({'clue': 'sealed_letter', 'by': uid})
+        }, token)
+
+    elif ability == 'steal_will' and role_key == 'shadow':
+        # Check if shadow knows where will is
+        gs = sb_get('game_sessions', f'id=eq.{game_id}&select=state', token) or []
+        state = json.loads(gs[0]['state']) if gs else {}
+        if state.get('will_location_known'):
+            state['will_stolen'] = True
+            sb_patch('game_sessions', f'id=eq.{game_id}', {'state': json.dumps(state)}, token)
+            result['message'] = 'Testament gestohlen.' if lang == 'de' else 'Will stolen.'
+        else:
+            result['ok'] = False
+            result['error'] = 'will_location_unknown'
+
+    elif ability == 'call_interrogation' and role_key == 'detective':
+        result['message'] = 'Verhör ausgerufen.' if lang == 'de' else 'Interrogation called.'
+        sb_post('game_events', {
+            'game_id': game_id, 'event_type': 'interrogation',
+            'from_player': uid, 'to_player': None,
+            'content': json.dumps({'inspector_id': uid})
+        }, token)
+
+    return jsonify(result)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

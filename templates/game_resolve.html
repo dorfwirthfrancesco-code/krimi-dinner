@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Spielende – Krimi Dinner{% endblock %}
+{% block head %}
+<style>
+  .resolve-hero { text-align:center; padding:48px 0 32px; }
+  .ending-title { font-family:'DM Serif Display',serif; font-size:clamp(2rem,6vw,3.5rem); margin-bottom:8px; }
+  .ending-text { color:var(--grey-5); font-size:.95rem; line-height:1.8; white-space:pre-line; max-width:560px; margin:0 auto 32px; }
+  .murderer-reveal-box { background:rgba(192,57,43,.08); border:2px solid #c0392b; border-radius:10px; padding:24px; text-align:center; margin-bottom:32px; }
+  .murderer-reveal-box h2 { font-family:'DM Serif Display',serif; color:#e74c3c; margin-bottom:6px; }
+  .role-reveal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:32px; }
+  .role-reveal-card { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:8px; padding:16px; }
+  .role-reveal-card.won { border-color:#27ae60; }
+  .role-reveal-card.murderer { border-color:#e74c3c; background:rgba(192,57,43,.05); }
+  .reveal-name { font-size:.9rem; font-weight:500; color:var(--white); margin-bottom:2px; }
+  .reveal-role { font-size:.72rem; color:var(--grey-5); margin-bottom:8px; }
+  .reveal-secret { font-size:.75rem; color:var(--grey-6); line-height:1.4; font-style:italic; }
+  .reveal-badge { font-size:.55rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:3px; display:inline-block; margin-bottom:8px; }
+  .badge-won { background:#27ae60; color:#fff; }
+  .badge-lost { background:var(--grey-3); color:var(--grey-5); }
+  .badge-murderer { background:#c0392b; color:#fff; }
+  .winner-names { font-family:'DM Serif Display',serif; font-size:1.1rem; color:#27ae60; margin-bottom:24px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="resolve-hero fade-up">
+  <div class="eyebrow">Spielende</div>
+  <h1 class="ending-title">{{ ending.title }}</h1>
+  <p class="ending-text">{{ ending.text }}</p>
+
+  {% if winner_names %}
+  <div class="winner-names">
+    Gewonnen: {{ winner_names | join(', ') }}
+  </div>
+  {% endif %}
+</div>
+
+<div class="murderer-reveal-box fade-up delay-1">
+  <h2>Der wahre Mörder war:</h2>
+  <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--white);">{{ murderer_name }}</div>
+  <div style="font-size:.82rem;color:var(--grey-5);margin-top:4px;">als {{ murderer_role }}</div>
+</div>
+
+<div class="eyebrow fade-up delay-2" style="margin-bottom:16px;">Alle Rollen enthüllt</div>
+<div class="role-reveal-grid fade-up delay-2">
+  {% for reveal in role_reveals %}
+  <div class="role-reveal-card {% if reveal.won %}won{% endif %} {% if reveal.was_murderer %}murderer{% endif %}">
+    {% if reveal.was_murderer %}
+    <span class="reveal-badge badge-murderer">Mörder</span>
+    {% elif reveal.won %}
+    <span class="reveal-badge badge-won">Gewonnen</span>
+    {% else %}
+    <span class="reveal-badge badge-lost">Verloren</span>
+    {% endif %}
+    <div class="reveal-name">{{ reveal.username }}</div>
+    <div class="reveal-role">{{ reveal.role_name }}</div>
+    <div class="reveal-secret">{{ reveal.secret }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div style="text-align:center;margin-top:32px;" class="fade-up delay-3">
+  <a href="/home" class="btn btn-primary" style="margin-right:10px;">Neues Spiel</a>
+  <a href="/profile" class="btn">Statistiken ansehen</a>
+</div>
+{% endblock %}
