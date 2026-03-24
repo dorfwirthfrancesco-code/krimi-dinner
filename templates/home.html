@@ -20,6 +20,7 @@
   .game-row:last-child { border-bottom:none; }
   .game-dot { width:8px; height:8px; border-radius:50%; background:var(--grey-3); flex-shrink:0; }
   .game-dot.owned { background:var(--white); }
+  .free-tag { font-size:.55rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 6px; border-radius:3px; background:var(--white); color:var(--black); margin-left:8px; }
 </style>
 {% endblock %}
 {% block content %}
@@ -54,9 +55,15 @@
     <h2>{{ t.home_my_cases }}</h2>
   </div>
   <div class="card" style="padding:0 24px;">
-    <a href="#" class="game-row">
+    <a href="/create-game" class="game-row">
       <span class="game-dot owned"></span>
-      <div><div style="font-size:.9rem;color:var(--white);">Mord im Orient-Express</div><div style="font-size:.75rem;color:var(--grey-5);">{{ t.genre_historical }} · 5–10 · 75 min</div></div>
+      <div>
+        <div style="font-size:.9rem;color:var(--white);">
+          Das Herrenhaus Dunkelbach
+          <span class="free-tag">Kostenlos</span>
+        </div>
+        <div style="font-size:.75rem;color:var(--grey-5);">Thriller · 4–10 Spieler · 90–120 Min</div>
+      </div>
       <span style="margin-left:auto;color:var(--grey-4);">›</span>
     </a>
     <a href="/shop" class="game-row" style="opacity:.4;">
