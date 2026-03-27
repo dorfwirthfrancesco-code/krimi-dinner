@@ -1,67 +1,104 @@
-# ═══════════════════════════════════════════════════════════════════════════════
-# KRIMI DINNER — SZENARIO 01
-# "Das Herrenhaus Dunkelbach"
-# ═══════════════════════════════════════════════════════════════════════════════
-# 4–10 Spieler · 90–120 Minuten · Zufälliger Mörder
-# ═══════════════════════════════════════════════════════════════════════════════
+# KRIMI DINNER — Das Herrenhaus Dunkelbach v2.0
+# Organischer Spielfluss, Baron als Spieler, mehr Aufgaben, Mörder-Tasks
 
 SCENARIO = {
     "id": "dunkelbach",
     "title": "Das Herrenhaus Dunkelbach",
-    "title_en": "Dunkelbach Manor",
     "min_players": 4,
     "max_players": 10,
     "description": {
-        "de": "Ein Sommerabend, 1923. Baron Aldric von Dunkelbach lädt seine engsten Vertrauten zu einem Abendessen. Am Morgen danach findet man ihn tot in seiner Bibliothek. Wer war es — und warum?",
-        "en": "A summer evening, 1923. Baron Aldric von Dunkelbach invites his closest confidants to a dinner. The next morning, he is found dead in his library. Who was it — and why?"
-    },
-    "atmosphere": "Eine Villa im Schwarzwald. Regen. Kamine. Weingläser. Geheimnisse.",
-    "host_setup_note": {
-        "de": "VOR DEM SPIEL: Verstecke einen gefalteten Zettel mit '§7 — Die Wahrheit liegt im Verborgenen' an einem geheimen Ort in deiner Wohnung. Du wirst später sagen wo. Stelle Wein oder Sekt bereit — das ist Teil des Spiels.",
-        "en": "BEFORE THE GAME: Hide a folded note with '§7 — The truth lies hidden' somewhere secret in your home. You will reveal where later. Prepare wine or sparkling drinks — this is part of the game."
+        "de": "Sommer 1923. Das Herrenhaus Dunkelbach. Eine Einladung die niemand ablehnen konnte — und eine Nacht die niemand vergessen wird. Der Baron ist tot. Aber wer von euch hat ihn getötet?",
+        "en": "Summer 1923. Dunkelbach Manor. An invitation nobody could decline — and a night nobody will forget. The Baron is dead. But which of you killed him?"
     },
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ROLLEN
-    # ─────────────────────────────────────────────────────────────────────────
+    "host_guide": {
+        "before_game": {
+            "de": [
+                "Verstecke einen Zettel im Badezimmer: 'Wer als erstes nach der Bibliothek fragt hat etwas zu verbergen — Baron Aldric'",
+                "Bereite Wein/Sekt vor — das Trinken ist Spielmechanik",
+                "Ein besonderes Glas = das Glas des Barons",
+                "Versiegelten Brief für Constanze vorbereiten",
+                "Schiller-Buch mit Foto und Notiz 'Blut ist dicker als Versprechen — A.' aufstellen",
+                "Der Baron ist eine NORMALE Spielrolle — du spielst auch mit!",
+                "Nach deinem 'Tod': Du stehst auf und spielst als Geist weiter — du flüsterst Hinweise aber redest nie laut"
+            ]
+        }
+    },
+
     "roles": {
 
-        # ── PFLICHT-ROLLEN (immer dabei, 4 Spieler) ──────────────────────────
+        "baron": {
+            "name": {"de": "Baron Aldric von Dunkelbach", "en": "Baron Aldric von Dunkelbach"},
+            "min_players": 4,
+            "can_be_murderer": False,
+            "ghost_mode": True,
+            "intro": {
+                "de": "Ich bin Baron Aldric von Dunkelbach. Ich habe euch eingeladen weil heute Nacht eine Wahrheit ans Licht kommt die zu lange verborgen war. Trinkt. Esst. Und beobachtet einander.",
+                "en": "I am Baron Aldric von Dunkelbach. I invited you because tonight a truth comes to light that has been hidden too long. Drink. Eat. And observe each other."
+            },
+            "appearance": {
+                "de": "Elegant aber müde. Trinkt seinen Wein sehr langsam. Hat einen Siegelring den er manchmal dreht. Lächelt selten — und wenn, dann nur mit den Augen.",
+                "en": "Elegant but tired. Drinks his wine very slowly. Has a signet ring he sometimes turns. Rarely smiles — and when he does, only with his eyes."
+            },
+            "secret": {
+                "de": "Du weißt dass jemand am Tisch dich töten will. Deshalb die Einladung — du wolltest Zeugen. Deine Beweise liegen in der Bibliothek. Die App sagt dir wer der Mörder ist — du darfst es nie direkt sagen, nur als Geist Hinweise flüstern.",
+                "en": "You know someone at this table wants to kill you. That is why the invitation — you wanted witnesses. Your evidence is in the library. The app tells you who the murderer is — you may never say it directly, only whisper clues as a ghost."
+            },
+            "ability": {
+                "name": {"de": "Der Geist weiß am meisten", "en": "The Ghost Knows Most"},
+                "description": {
+                    "de": "Nach deinem Tod spielst du als Geist weiter. Du darfst zu jedem Spieler gehen und ihm einen wahren Hinweis zuflüstern. Du darfst nicken oder den Kopf schütteln wenn jemand dich direkt fragt. Aber kein Wort laut vor allen.",
+                    "en": "After your death you continue playing as a ghost. You may go to each player and whisper them one true clue. You may nod or shake your head when someone asks you directly. But no word aloud before everyone."
+                }
+            },
+            "win_condition": {
+                "de": "Der Mörder wird gefasst. Du gewinnst auch als Geist.",
+                "en": "The murderer is caught. You win even as a ghost."
+            },
+            "clues_i_hold": ["barons_evidence", "library_key"],
+            "starting_knowledge": {
+                "de": "Die App hat dir den Namen des Mörders mitgeteilt. Merke ihn dir. Du darfst ihn nie direkt nennen. Aber als Geist kannst du Hinweise flüstern die dahin führen.",
+                "en": "The app has told you the murderer's name. Remember it. You may never name them directly. But as a ghost you can whisper clues that lead there."
+            }
+        },
 
         "butler": {
             "name": {"de": "Edmund, der Butler", "en": "Edmund, the Butler"},
             "min_players": 4,
             "can_be_murderer": True,
             "intro": {
-                "de": "Ich bin Edmund Kraus, seit 31 Jahren Butler im Haus Dunkelbach. Ich kenne jeden Winkel, jedes Geheimnis dieser Villa. Der Baron war kein einfacher Mann — aber er war mein Mann.",
-                "en": "I am Edmund Kraus, butler at Dunkelbach Manor for 31 years. I know every corner, every secret of this villa. The Baron was not a simple man — but he was my man."
+                "de": "Edmund Kraus. 31 Jahre Butler in diesem Haus. Ich kenne jeden Winkel. Der Baron vertraut mir. Vertraute mir. Ich tue nur meinen Dienst.",
+                "en": "Edmund Kraus. 31 years butler in this house. I know every corner. The Baron trusts me. Trusted me. I am simply doing my duty."
             },
             "appearance": {
-                "de": "Tadellos gekleidet. Immer mit weißen Handschuhen. Macht nervös kleine Handbewegungen wenn er lügt.",
-                "en": "Impeccably dressed. Always white gloves. Makes small nervous hand movements when lying."
+                "de": "Weiße Handschuhe. Steht immer leicht abseits. Reibt Daumen und Zeigefinger aneinander wenn er lügt.",
+                "en": "White gloves. Always stands slightly apart. Rubs thumb and forefinger together when lying."
             },
             "secret": {
-                "de": "Ich unterschlug seit 3 Jahren Geld aus der Haushaltskasse. Der Baron wusste es. Er hatte mir eine Woche gegeben um es zurückzuzahlen. Die Frist lief heute ab.",
-                "en": "For 3 years I embezzled money from the household fund. The Baron knew. He gave me one week to repay it. The deadline was today."
+                "de": "Ich habe 8.400 Mark gestohlen. Der Baron wusste es — Frist lief heute ab. Ich habe heute Nachmittag jemanden in der Bibliothek gesehen der dort nichts zu suchen hatte.",
+                "en": "I stole 8,400 marks. The Baron knew — deadline was today. I saw someone in the library this afternoon who had no business being there."
             },
             "ability": {
-                "name": {"de": "Herr des Hauses", "en": "Master of the House"},
-                "description": {"de": "Du kennst jeden Raum. Einmal pro Spiel kannst du einen anderen Spieler fragen: 'Wo warst du um Mitternacht?' — er muss antworten, darf aber lügen. Du siehst ob seine Antwort mit den Grundrissen übereinstimmt.",
-                "en": "You know every room. Once per game you may ask another player: 'Where were you at midnight?' — they must answer but may lie. You can tell if their answer matches the floor plan."}
+                "name": {"de": "Der Zeuge", "en": "The Witness"},
+                "description": {
+                    "de": "Du kannst einmal behaupten jemanden 'gesehen' zu haben — Zeit und Ort. Wahr oder gelogen. Nur du weißt es.",
+                    "en": "Once you may claim to have 'seen' someone — time and place. True or lie. Only you know."
+                }
             },
             "win_condition": {
-                "de": "Überlebe. Werde nicht als Mörder verurteilt. Wenn der echte Mörder gefasst wird, gewinnst du — außer jemand beweist deinen Diebstahl. Dann verlierst du trotz allem.",
-                "en": "Survive. Don't get convicted as murderer. If the real killer is caught, you win — unless someone proves your theft. Then you lose despite everything."
+                "de": "Überlebe ohne dass dein Diebstahl bewiesen wird und ohne als Mörder verurteilt zu werden.",
+                "en": "Survive without your theft being proven and without being convicted as murderer."
             },
             "murderer_motive_if_assigned": {
-                "de": "Der Baron hatte ein Testament geändert — Edmund würde nichts erben. Schlimmer: Er würde angezeigt. Edmund vergiftete den Wein des Barons mit Digitalis aus der Gartenküche.",
-                "en": "The Baron had changed his will — Edmund would inherit nothing. Worse: he would be reported. Edmund poisoned the Baron's wine with digitalis from the garden kitchen."
+                "de": "Edmund mixte Digitalis aus dem Weinkeller in den Wein des Barons. Schlüssel W-7.",
+                "en": "Edmund mixed digitalis from the wine cellar into the Baron's wine. Key W-7."
             },
             "clues_i_hold": ["key_cellar", "household_ledger"],
             "starting_knowledge": {
-                "de": "Du weißt, dass der Baron heute Nachmittag ein Telegramm erhalten hat. Du hast es nicht gelesen — aber du hast gesehen wie er danach bebte.",
-                "en": "You know the Baron received a telegram this afternoon. You didn't read it — but you saw how he trembled afterwards."
-            }
+                "de": "Du hast zwischen 16 und 17 Uhr jemanden in der Bibliothek gesehen. Die App sagt dir wer.",
+                "en": "You saw someone in the library between 4 and 5pm. The app tells you who."
+            },
+            "connection": {"with": "niece", "type": "library_witness"}
         },
 
         "niece": {
@@ -69,66 +106,71 @@ SCENARIO = {
             "min_players": 4,
             "can_be_murderer": True,
             "intro": {
-                "de": "Constanze von Dunkelbach, die einzige Verwandte des Barons. Ich bin nicht seinetwegen hier — ich bin wegen dem, was ihm gehört.",
-                "en": "Constanze von Dunkelbach, the Baron's only living relative. I'm not here for him — I'm here for what belongs to him."
+                "de": "Constanze von Dunkelbach. Die einzige Familie die der Baron anerkennt. Ich bin hier wegen dem was mir versprochen wurde.",
+                "en": "Constanze von Dunkelbach. The only family the Baron acknowledges. I am here for what was promised to me."
             },
             "appearance": {
-                "de": "Elegant aber angespannt. Überprüft ständig ihr Handtäschchen. Hat einen versiegelten Brief dabei den sie niemanden zeigt.",
-                "en": "Elegant but tense. Constantly checks her handbag. Carries a sealed letter she shows no one."
+                "de": "Elegant, angespannt. Trägt einen versiegelten Umschlag. Wechselt ihr Glas heimlich.",
+                "en": "Elegant, tense. Carries a sealed envelope. Secretly switches her glass."
             },
             "secret": {
-                "de": "Der Baron hatte versprochen, mir sein gesamtes Vermögen zu hinterlassen. Letzten Monat erfuhr ich durch einen Anwalt: Er hatte das Testament geändert. Ich erbe fast nichts.",
-                "en": "The Baron had promised to leave me his entire fortune. Last month I learned from a lawyer: he had changed the will. I inherit almost nothing."
+                "de": "Das Testament wurde geändert — ich erbe fast nichts. Ich war in der Bibliothek und habe es gelesen. Der Butler hat mich gesehen.",
+                "en": "The will was changed — I inherit almost nothing. I was in the library and read it. The butler saw me."
             },
             "ability": {
-                "name": {"de": "Das Erbe", "en": "The Inheritance"},
-                "description": {"de": "Du trägst einen echten Brief. Du entscheidest wann du ihn öffnest und vorliest. Der Inhalt des Briefes verändert das Spiel — er enthält einen Hinweis auf die wahre Todesursache. Aber wenn du ihn zu früh zeigst, machst du dich verdächtig.",
-                "en": "You carry a real letter. You decide when to open and read it aloud. The letter's contents change the game — it contains a clue to the true cause of death. But showing it too early makes you suspicious."}
+                "name": {"de": "Der Brief", "en": "The Letter"},
+                "description": {
+                    "de": "Du hast einen echten versiegelten Brief. Du entscheidest wann du ihn öffnest. Je länger du wartest desto verdächtiger wirkst du. Je früher du ihn öffnest desto mehr geben andere preis.",
+                    "en": "You have a real sealed letter. You decide when to open it. The longer you wait the more suspicious you seem. The earlier you open it the more others reveal."
+                }
             },
             "win_condition": {
-                "de": "Überlebe. Wenn der Mörder gefasst wird: Du gewinnst nur wenn niemand das neue Testament findet. Findet jemand das Testament, gewinnst du nur wenn du den Mörder als erste benennst.",
-                "en": "Survive. If the killer is caught: You win only if nobody finds the new will. If someone finds it, you only win if you're the first to name the murderer."
+                "de": "Das neue Testament darf nicht gefunden werden. Wenn es gefunden wird: Nenne als erste den Mörder.",
+                "en": "The new will must not be found. If it is found: name the murderer first."
             },
             "murderer_motive_if_assigned": {
-                "de": "Das neue Testament hätte Constanze ruiniert. Sie fand in der Bibliothek Raum und Gelegenheit — und das Brieföffner-Messer des Barons.",
-                "en": "The new will would have ruined Constanze. She found room and opportunity in the library — and the Baron's letter opener."
+                "de": "Das neue Testament hätte Constanze zerstört. In der Bibliothek fand sie die Gelegenheit.",
+                "en": "The new will would have destroyed Constanze. In the library she found the opportunity."
             },
             "clues_i_hold": ["sealed_letter", "new_will_location"],
             "starting_knowledge": {
-                "de": "Du weißt wo das neue Testament liegt. Du hast es heute Nachmittag heimlich gelesen. Du wirst alles dafür tun dass es niemand findet.",
-                "en": "You know where the new will is. You read it secretly this afternoon. You will do anything to make sure nobody finds it."
-            }
+                "de": "Du warst in der Bibliothek — das Testament liegt hinter den Rechtsbüchern, drittes Regal. Der Butler hat dich gesehen.",
+                "en": "You were in the library — the will is behind the law books, third shelf. The butler saw you."
+            },
+            "connection": {"with": "butler", "type": "library_witness"}
         },
 
         "witness": {
-            "name": {"de": "Marta, die Zeugin", "en": "Marta, the Witness"},
+            "name": {"de": "Marta, die Schriftstellerin", "en": "Marta, the Writer"},
             "min_players": 4,
             "can_be_murderer": False,
             "intro": {
-                "de": "Ich bin Marta Stein, Schriftstellerin. Der Baron kannte meine Mutter. Er lud mich zum Dinner ein — ich dachte, es wäre eine nette Gelegenheit. Ich hätte es ablehnen sollen.",
-                "en": "I am Marta Stein, a writer. The Baron knew my mother. He invited me to dinner — I thought it would be a nice occasion. I should have declined."
+                "de": "Marta Stein. Ich schreibe, ich beobachte, ich vergesse nichts. Der Baron kannte meine Mutter. Ich wollte nur ein ruhiges Dinner.",
+                "en": "Marta Stein. I write, I observe, I forget nothing. The Baron knew my mother. I just wanted a quiet dinner."
             },
             "appearance": {
-                "de": "Beobachtet alles. Macht mentale Notizen. Hat immer ein kleines Notizbuch dabei. Spricht wenig, hört viel.",
-                "en": "Observes everything. Takes mental notes. Always has a small notebook. Speaks little, listens much."
+                "de": "Kleines Notizbuch in der Tasche. Spricht wenig. Hört sehr viel. Hat etwas gesehen das sie nicht einordnen kann.",
+                "en": "Small notebook in pocket. Speaks little. Listens a lot. Saw something she cannot explain."
             },
             "secret": {
-                "de": "Ich habe etwas gesehen. Kurz vor Mitternacht, durchs Fenster. Ich weiß selbst nicht genau was — eine Silhouette, Bewegung, ein Licht das ausging. Ich habe Angst zu sagen was ich gesehen habe.",
-                "en": "I saw something. Just before midnight, through the window. I'm not sure exactly what — a silhouette, movement, a light going out. I'm afraid to say what I saw."
+                "de": "Ich habe kurz vor Mitternacht etwas gesehen — durch das Fenster der Bibliothek. Eine Silhouette. Etwas in der Hand. Ich habe Angst zu sagen was.",
+                "en": "Just before midnight I saw something — through the library window. A silhouette. Something in their hand. I am afraid to say what."
             },
             "ability": {
-                "name": {"de": "Die Beobachterin", "en": "The Observer"},
-                "description": {"de": "Du erhältst im Laufe des Spiels automatisch Hinweise durch deine Beobachtungsgabe — ohne danach suchen zu müssen. Aber: Jeder dieser Hinweise kommt mit einer Frage die nur du beantworten kannst. Beantworten bringt mehr Hinweise. Schweigen ist sicherer aber langsamer.",
-                "en": "Throughout the game you automatically receive clues through your observational skills — without searching for them. But: Each clue comes with a question only you can answer. Answering brings more clues. Silence is safer but slower."}
+                "name": {"de": "Die Erinnerung schärft sich", "en": "The Memory Sharpens"},
+                "description": {
+                    "de": "Jedes Mal wenn du etwas sagst das stimmt schärft sich deine Erinnerung. Die App gibt dir automatisch präzisere Hinweise je aktiver du sprichst. Schweigen macht dich sicher aber blind.",
+                    "en": "Each time you say something true your memory sharpens. The app automatically gives you more precise clues the more actively you speak. Silence keeps you safe but blind."
+                }
             },
             "win_condition": {
-                "de": "Wenn du am Ende die richtige Person nennst UND beweist was du gesehen hast, gewinnst du allein — selbst wenn die Mehrheit falsch liegt.",
-                "en": "If at the end you name the right person AND prove what you saw, you win alone — even if the majority is wrong."
+                "de": "Wenn du am Ende die richtige Person nennst UND beweist was du gesehen hast gewinnst du allein.",
+                "en": "If at the end you name the right person AND prove what you saw you win alone."
             },
             "clues_i_hold": [],
             "starting_knowledge": {
-                "de": "Du hast eine Silhouette gesehen. Du weißt noch nicht wer es war. Im Laufe des Spiels werden sich deine Erinnerungen schärfen — aber nur wenn du aktiv sprichst.",
-                "en": "You saw a silhouette. You don't yet know who it was. As the game progresses your memory will sharpen — but only if you actively speak."
+                "de": "Du hast eine Silhouette gesehen. Etwas Langes Dünnes in der rechten Hand. Du weißt noch nicht wer es war — aber du wirst es herausfinden je mehr du redest.",
+                "en": "You saw a silhouette. Something long and thin in the right hand. You don't yet know who it was — but you'll find out the more you speak."
             }
         },
 
@@ -137,72 +179,74 @@ SCENARIO = {
             "min_players": 4,
             "can_be_murderer": True,
             "intro": {
-                "de": "Dr. Heinrich Voss, Arzt. Der Baron war mein Patient — und mein Freund. Ich war heute Abend dabei. Ich hätte es verhindern sollen.",
-                "en": "Dr. Heinrich Voss, physician. The Baron was my patient — and my friend. I was there tonight. I should have prevented it."
+                "de": "Dr. Heinrich Voss. Der Baron war mein Patient und mein Freund. Ich hätte es verhindern sollen.",
+                "en": "Dr. Heinrich Voss. The Baron was my patient and my friend. I should have prevented it."
             },
             "appearance": {
-                "de": "Ruhig. Professionell. Hat immer eine kleine Arzttasche dabei. Wird blass wenn jemand über Gift spricht.",
-                "en": "Calm. Professional. Always carries a small doctor's bag. Goes pale when someone mentions poison."
+                "de": "Ruhig. Professionell. Hat immer seine Arzttasche dabei. Wird blass wenn jemand das Wort Gift benutzt.",
+                "en": "Calm. Professional. Always has his medical bag. Goes pale when someone uses the word poison."
             },
             "secret": {
-                "de": "Vor zwei Jahren verschrieb ich dem Baron das falsche Medikament. Er wurde fast blind. Er hatte mir vergeben — oder so dachte ich. Heute Abend teilte er mir mit: Er hatte eine Klage eingereicht. Meine Karriere wäre vorbei.",
-                "en": "Two years ago I prescribed the Baron the wrong medication. He almost went blind. He had forgiven me — or so I thought. This evening he informed me: he had filed a complaint. My career would be over."
+                "de": "Vor zwei Jahren verschrieb ich dem Baron das falsche Medikament. Heute Abend teilte er mir mit: Er hat eine Klage eingereicht. Meine Karriere ist vorbei — außer er zieht sie zurück.",
+                "en": "Two years ago I prescribed the Baron the wrong medication. This evening he told me: he filed a complaint. My career is over — unless he withdraws it."
             },
             "ability": {
-                "name": {"de": "Die Autopsie", "en": "The Autopsy"},
-                "description": {"de": "Du allein kannst die Todesursache offiziell bestimmen. Wenn du dein Ergebnis verkündest, glauben es alle — außer einer Person (der Mörder weiß dass du recht oder unrecht hast). Aber Achtung: Du kannst auch absichtlich lügen. Nur du weißt das.",
-                "en": "Only you can officially determine the cause of death. When you announce your finding, everyone believes it — except one person (the murderer knows if you're right or wrong). But beware: you can deliberately lie. Only you know that."}
+                "name": {"de": "Die Diagnose", "en": "The Diagnosis"},
+                "description": {
+                    "de": "Du allein kannst die Todesursache bestimmen. Deine Aussage gilt als offiziell. Du kannst lügen — nur du und der Mörder wissen ob du recht hast.",
+                    "en": "Only you can determine the cause of death. Your statement counts as official. You can lie — only you and the murderer know if you are right."
+                }
             },
             "win_condition": {
-                "de": "Wenn du die Todesursache korrekt benennst UND den richtigen Mörder mitbenennst, erhältst du den Ehrentitel 'Meisterdetektiv'. Lügst du bei der Todesursache und der Mörder entkommt, verlierst du.",
-                "en": "If you correctly name the cause of death AND name the right murderer, you receive the honorary title 'Master Detective'. If you lie about the cause of death and the murderer escapes, you lose."
+                "de": "Nenne korrekte Todesursache und richtigen Mörder: Ehrentitel Meisterdetektiv. Lüge bei der Todesursache und Mörder entkömmt: Du verlierst.",
+                "en": "Name correct cause of death and right murderer: honorary title Master Detective. Lie about cause of death and murderer escapes: you lose."
             },
             "murderer_motive_if_assigned": {
-                "de": "Heinrich Voss tötete den Baron mit einer Überdosis seines eigenen Herzmedikaments — ein Tod der wie natürlich aussieht. Fast perfekt. Fast.",
-                "en": "Heinrich Voss killed the Baron with an overdose of his own heart medication — a death that looks natural. Almost perfect. Almost."
+                "de": "Heinrich tötete den Baron mit einer Überdosis seiner eigenen Herzmedikamente. Fast perfekt.",
+                "en": "Heinrich killed the Baron with an overdose of his own heart medication. Almost perfect."
             },
             "clues_i_hold": ["medical_bag", "cause_of_death"],
             "starting_knowledge": {
-                "de": "Du weißt: Der Baron hatte ein Herzleiden. Die Medikamente die er nahm könnten bei falscher Dosierung tödlich sein. Das ist kein Geheimnis — aber nicht jeder weiß es.",
-                "en": "You know: The Baron had a heart condition. The medication he took could be lethal at the wrong dosage. This isn't secret — but not everyone knows it."
+                "de": "Der Baron hatte ein Herzleiden. Seine Medikamente — bei falscher Dosierung — könnten tödlich sein. Das weißt nur du.",
+                "en": "The Baron had a heart condition. His medications — at wrong dosage — could be lethal. Only you know this."
             }
         },
-
-        # ── OPTIONALE ROLLEN (kommen hinzu je nach Spielerzahl) ───────────────
 
         "cook": {
             "name": {"de": "Rosa, die Köchin", "en": "Rosa, the Cook"},
             "min_players": 5,
             "can_be_murderer": True,
             "intro": {
-                "de": "Rosa Müller, Köchin seit 8 Jahren im Haus Dunkelbach. Ich habe das Dinner gekocht. Ich habe alles gesehen. Ich sage nichts.",
-                "en": "Rosa Müller, cook for 8 years at Dunkelbach Manor. I cooked the dinner. I saw everything. I say nothing."
+                "de": "Rosa Müller. Acht Jahre Köchin hier. Ich habe das Dinner gekocht. Ich habe alles gesehen. Ich sage nichts.",
+                "en": "Rosa Müller. Eight years cook here. I cooked the dinner. I saw everything. I say nothing."
             },
             "appearance": {
-                "de": "Nervös. Hände immer in Bewegung. Vermeidet Blickkontakt. Hat ein kleines Kruzifix um den Hals das sie ständig berührt.",
-                "en": "Nervous. Hands always moving. Avoids eye contact. Has a small crucifix around her neck she constantly touches."
+                "de": "Nervös. Hände in Bewegung. Berührt ständig das Kruzifix um ihren Hals. Vermeidet Blickkontakt.",
+                "en": "Nervous. Hands moving. Constantly touches the crucifix around her neck. Avoids eye contact."
             },
             "secret": {
-                "de": "Jemand kam heute Nachmittag in meine Küche und bat mich etwas in das Essen des Barons zu geben. Ich dachte es sei Herzstärkendes. Ich stellte keine Fragen. Ich bekam Geld. Viel Geld.",
-                "en": "Someone came to my kitchen this afternoon and asked me to put something in the Baron's food. I thought it was a heart tonic. I asked no questions. I received money. A lot of money."
+                "de": "Jemand bat mich heute Nachmittag etwas in das Essen des Barons zu geben. Ich dachte es sei harmlos. Ich bekam 200 Mark. Ich habe nicht gefragt was es war.",
+                "en": "Someone asked me this afternoon to put something in the Baron's food. I thought it was harmless. I received 200 marks. I didn't ask what it was."
             },
             "ability": {
-                "name": {"de": "Was in der Küche geschah", "en": "What Happened in the Kitchen"},
-                "description": {"de": "Einmal kannst du die Wahrheit enthüllen: Wer dich beauftragte. Aber du weißt nur einen Namen — und du bist nicht sicher ob dieser Name der Mörder ist oder nur ein Werkzeug. Diese Enthüllung verändert das komplette Spiel.",
-                "en": "Once you may reveal the truth: who hired you. But you only know a name — and you're not sure if that name is the murderer or just a pawn. This revelation changes the entire game."}
+                "name": {"de": "Das Geständnis", "en": "The Confession"},
+                "description": {
+                    "de": "Einmal kannst du enthüllen wer dich beauftragt hat. Aber: Du kennst nur den Namen — nicht ob diese Person der Mörder oder nur ein Werkzeug ist. Diese Enthüllung verändert das Spiel komplett.",
+                    "en": "Once you may reveal who hired you. But: you only know the name — not whether this person is the murderer or just a pawn. This revelation completely changes the game."
+                }
             },
             "win_condition": {
-                "de": "Du überlebst wenn du die Wahrheit sagst ODER wenn niemand herausfindet was du getan hast. Schweigen ist riskant — aber reden auch.",
-                "en": "You survive if you tell the truth OR if nobody discovers what you did. Silence is risky — but so is talking."
+                "de": "Überlebe wenn du die Wahrheit sagst ODER wenn niemand herausfindet was du getan hast.",
+                "en": "Survive if you tell the truth OR if nobody finds out what you did."
             },
             "murderer_motive_if_assigned": {
-                "de": "Rosa liebte den Baron — aber er behandelte sie wie Möbel. Sie beauftragte sich selbst. Sie mixte Gift in seine Suppe. Dann aß sie selbst davon, um unverdächtig zu sein. Nur wenig — nicht genug.",
-                "en": "Rosa loved the Baron — but he treated her like furniture. She commissioned herself. She mixed poison into his soup. Then ate some herself, to avoid suspicion. Only a little — not enough."
+                "de": "Rosa liebte den Baron aber er behandelte sie wie Möbel. Sie vergiftete sein Essen selbst — und aß dann wenig davon um unverdächtig zu sein.",
+                "en": "Rosa loved the Baron but he treated her like furniture. She poisoned his food herself — then ate a little of it to avoid suspicion."
             },
             "clues_i_hold": ["kitchen_substance", "payment_receipt"],
             "starting_knowledge": {
-                "de": "Du weißt was du dem Baron gegeben hast. Du weißt aber nicht ob es ihn getötet hat. Das erfährst du wenn der Arzt die Todesursache nennt.",
-                "en": "You know what you gave the Baron. But you don't know if it killed him. You'll find out when the doctor names the cause of death."
+                "de": "Du weißt was du dem Baron gegeben hast. Du weißt nicht ob es ihn getötet hat. Die App sagt dir wer dich beauftragt hat.",
+                "en": "You know what you gave the Baron. You don't know if it killed him. The app tells you who hired you."
             }
         },
 
@@ -211,143 +255,113 @@ SCENARIO = {
             "min_players": 5,
             "can_be_murderer": True,
             "intro": {
-                "de": "Ich gebe meinen Namen nicht preis. Der Baron wusste wer ich bin. Der Rest von euch wird es erfahren — wenn ich es für richtig halte.",
-                "en": "I don't reveal my name. The Baron knew who I am. The rest of you will learn — when I see fit."
+                "de": "Ich nenne meinen Namen nicht. Der Baron wusste wer ich bin. Der Rest erfährt es wenn ich es für richtig halte.",
+                "en": "I don't reveal my name. The Baron knew who I am. The rest of you will learn when I see fit."
             },
             "appearance": {
-                "de": "Keine Erklärung warum er/sie hier ist. Hat eine Visitenkarte die nur eine Nummer trägt. Spricht selten — aber wenn, dann sehr präzise.",
-                "en": "No explanation for being here. Carries a business card with only a number on it. Speaks rarely — but when they do, very precisely."
+                "de": "Unauffällig — was auffällig ist. Hat eine Visitenkarte mit nur einer Nummer. Spricht selten, sehr präzise.",
+                "en": "Inconspicuous — which is conspicuous. Has a business card with only a number. Speaks rarely, very precisely."
             },
             "secret": {
-                "de": "Ich bin ein Privatdetektiv. Der Baron hat mich engagiert um jemanden in dieser Runde zu beschatten. Ich darf nicht sagen wen — das steht in meinem Vertrag. Nun ist mein Auftraggeber tot.",
-                "en": "I am a private detective. The Baron hired me to surveil someone in this group. I may not say who — that's in my contract. Now my client is dead."
+                "de": "Ich bin Privatdetektiv. Der Baron hat mich engagiert um jemanden am Tisch zu beschatten. Meinen Auftraggeber darf ich nicht nennen — das steht im Vertrag.",
+                "en": "I am a private detective. The Baron hired me to surveil someone at this table. I may not name my client — that's in the contract."
             },
             "ability": {
                 "name": {"de": "Die Akte", "en": "The File"},
-                "description": {"de": "Du hast eine Akte über eine Person am Tisch. Du darfst jeden Hinweis aus dieser Akte anonym weitergeben — aber nie direkt. Jede Weitergabe trägt das Risiko dass man dich als Quelle identifiziert.",
-                "en": "You have a file on one person at the table. You may pass any clue from this file anonymously — but never directly. Each pass carries the risk of being identified as the source."}
+                "description": {
+                    "de": "Du hast eine Akte über eine Person. Du kannst Hinweise daraus anonym weitergeben — aber nie direkt. Jede Weitergabe riskiert dass man dich als Quelle erkennt.",
+                    "en": "You have a file on one person. You can pass clues from it anonymously — but never directly. Each pass risks revealing you as the source."
+                }
             },
             "win_condition": {
-                "de": "Du gewinnst wenn dein Klient gerächt wird — also wenn der echte Mörder gefasst wird. Aber du verlierst wenn die Person die du beschattest verurteilt wird UND es der falsche Mörder ist.",
-                "en": "You win if your client is avenged — that is, if the real murderer is caught. But you lose if the person you were surveilling is convicted AND they're the wrong murderer."
+                "de": "Der echte Mörder wird gefasst. Aber du verlierst wenn die Person die du beschattest zu Unrecht verurteilt wird.",
+                "en": "The real murderer is caught. But you lose if the person you were surveilling is unjustly convicted."
             },
             "murderer_motive_if_assigned": {
-                "de": "Der Fremde entdeckte: Der Baron plante ihn/sie zu ruinieren. Das 'Beschatten' war ein Test — ein Vertrauenstest. Den hatte der Fremde bestanden. Dann erfuhr er/sie die Wahrheit. Und handelte.",
-                "en": "The Stranger discovered: the Baron planned to ruin them. The 'surveillance' was a test — a test of trust. The Stranger had passed it. Then they learned the truth. And acted."
+                "de": "Der Fremde entdeckte dass der Baron plante ihn zu ruinieren. Er handelte zuerst.",
+                "en": "The Stranger discovered the Baron planned to ruin them. They acted first."
             },
             "clues_i_hold": ["surveillance_file", "telegram_copy"],
             "starting_knowledge": {
-                "de": "Du weißt wer in dieser Runde die meisten Geheimnisse hat. Du weißt es nicht durch Magie — sondern weil du seit Wochen Notizen machst.",
-                "en": "You know who in this group has the most secrets. Not through magic — because you've been taking notes for weeks."
+                "de": "Die App sagt dir wen du beschattest. Du hast eine Akte mit drei Geheimnissen dieser Person.",
+                "en": "The app tells you who you are surveilling. You have a file with three secrets about this person."
             }
         },
 
         "detective": {
-            "name": {"de": "Inspektor Wahl", "en": "Inspector Wahl"},
+            "name": {"de": "Inspektor Karl Wahl", "en": "Inspector Karl Wahl"},
             "min_players": 6,
             "can_be_murderer": False,
             "intro": {
-                "de": "Inspektor Karl Wahl, Kriminalpolizei München. Ich bin nicht als Gast hier — ich war bereits auf dem Weg zum Baron als ich die Nachricht erhielt. Der Baron hatte mich gerufen. Er hatte Angst.",
-                "en": "Inspector Karl Wahl, Criminal Police Munich. I'm not here as a guest — I was already on my way to the Baron when I received the news. The Baron had summoned me. He was afraid."
+                "de": "Inspektor Karl Wahl, Kriminalpolizei München. Ich war bereits auf dem Weg als ich die Nachricht erhielt. Der Baron hatte mich gerufen. Er hatte Angst.",
+                "en": "Inspector Karl Wahl, Criminal Police Munich. I was already on my way when I received the news. The Baron had summoned me. He was afraid."
             },
             "appearance": {
-                "de": "Trägt trotz Gesellschaft keine Abendkleidung. Schreibt alles auf. Hat kalte Augen die nichts vergessen.",
-                "en": "Despite the social setting, doesn't wear evening clothes. Writes everything down. Has cold eyes that forget nothing."
+                "de": "Keine Abendkleidung. Schreibt alles auf. Kalte Augen die nichts vergessen.",
+                "en": "No evening clothes. Writes everything down. Cold eyes that forget nothing."
             },
             "secret": {
-                "de": "Der Brief den der Baron mir schickte enthielt einen Namen: eine Person am heutigen Tisch. Der Baron fürchtete diese Person. Ich habe diesen Brief — aber ich darf ihn aus rechtlichen Gründen noch nicht zeigen.",
-                "en": "The letter the Baron sent me contained a name: one person at today's table. The Baron feared this person. I have this letter — but for legal reasons I cannot yet show it."
+                "de": "Der Baron schrieb mir: Er fürchtet jemanden am Tisch. Einen Namen. Ich habe den Brief — aber darf ihn aus juristischen Gründen noch nicht zeigen.",
+                "en": "The Baron wrote to me: he fears someone at this table. A name. I have the letter — but cannot show it yet for legal reasons."
             },
             "ability": {
-                "name": {"de": "Offizielles Verhör", "en": "Official Interrogation"},
-                "description": {"de": "Einmal kannst du ein offizielles Verhör ausrufen. Jeder muss die Gruppe verlassen — du redest 2 Minuten allein mit einer Person. Was in diesen 2 Minuten gesagt wird, entscheidet ihr selbst. Aber danach muss jeder sagen ob die Person kooperativ war.",
-                "en": "Once you may call an official interrogation. Everyone must leave the group — you talk alone with one person for 2 minutes. What happens in those 2 minutes is up to you. But afterwards everyone must say whether the person was cooperative."}
+                "name": {"de": "Das Verhör", "en": "The Interrogation"},
+                "description": {
+                    "de": "Einmal kannst du ein offizielles Verhör ausrufen. Alle verlassen den Raum — du redest 2 Minuten allein mit einer Person. Danach muss jeder sagen ob die Person kooperativ war.",
+                    "en": "Once you may call an official interrogation. Everyone leaves the room — you talk alone with one person for 2 minutes. Afterwards everyone must say whether the person was cooperative."
+                }
             },
             "win_condition": {
-                "de": "Du gewinnst nur wenn DU den Mörder als erster offiziell benennst — mit Beweisen. Benennt jemand anderes den Mörder zuerst korrekt, gewinnst du nur Bronze.",
-                "en": "You win only if YOU are the first to officially name the murderer — with evidence. If someone else names the murderer correctly first, you only get bronze."
+                "de": "Du gewinnst nur wenn DU als erster den Mörder offiziell und korrekt benennst — mit Beweisen.",
+                "en": "You win only if YOU are first to officially and correctly name the murderer — with evidence."
             },
             "clues_i_hold": ["baron_letter", "suspects_list"],
             "starting_knowledge": {
-                "de": "Der Baron schrieb dir: 'Ich fürchte [NAME]. Wenn mir etwas passiert — suche in der Bibliothek unter dem Teppich.' Du hast diesen Brief. Und du weißt welcher Name darin steht. Aber dieser Name ist nicht zwingend der Mörder.",
-                "en": "The Baron wrote to you: 'I fear [NAME]. If something happens to me — look in the library under the carpet.' You have this letter. And you know which name it contains. But this name is not necessarily the murderer."
+                "de": "Der Baron schrieb dir einen Namen. Die App zeigt ihn dir — aber dieser Name ist nicht zwingend der Mörder. 70% Chance dass er stimmt.",
+                "en": "The Baron wrote you a name. The app shows it to you — but this name is not necessarily the murderer. 70% chance it is correct."
             }
         },
 
         "lover": {
-            "name": {"de": "Viktor, der Geliebte", "en": "Viktor, the Lover"},
+            "name": {"de": "Viktor Reiss, der Geschäftspartner", "en": "Viktor Reiss, the Business Partner"},
             "min_players": 7,
             "can_be_murderer": True,
             "intro": {
-                "de": "Viktor Reiss, Geschäftspartner des Barons. Wir kannten uns gut. Sehr gut. Zu gut, wenn ich ehrlich bin.",
-                "en": "Viktor Reiss, business partner of the Baron. We knew each other well. Very well. Too well, if I'm honest."
+                "de": "Viktor Reiss. Geschäftspartner des Barons. Wir kannten uns sehr gut. Zu gut vielleicht.",
+                "en": "Viktor Reiss. Business partner of the Baron. We knew each other very well. Too well perhaps."
             },
             "appearance": {
-                "de": "Charmant. Zu charmant. Hat ein Monogramm-Taschentuch. Wird rot wenn jemand bestimmte Namen nennt.",
-                "en": "Charming. Too charming. Has a monogrammed handkerchief. Turns red when certain names are mentioned."
+                "de": "Charmant. Hat ein Monogramm-Taschentuch. Wird rot wenn bestimmte Namen fallen.",
+                "en": "Charming. Has a monogrammed handkerchief. Turns red when certain names are mentioned."
             },
             "secret": {
-                "de": "Viktor und eine andere Person am Tisch haben eine geheime Affäre. Beide wissen es. Keiner darf es zugeben. Viktors Alibi — er war nicht allein um Mitternacht — kann nur bewiesen werden wenn die andere Person die Affäre zugibt. Aber das würde sie/ihn ruinieren.",
-                "en": "Viktor and another person at the table have a secret affair. Both know it. Neither may admit it. Viktor's alibi — he was not alone at midnight — can only be proven if the other person admits the affair. But that would ruin them."
+                "de": "Viktor und eine andere Person am Tisch haben eine geheime Affäre. Sein Alibi — er war nicht allein um Mitternacht — kann nur bewiesen werden wenn die andere Person die Affäre zugibt.",
+                "en": "Viktor and another person at this table have a secret affair. His alibi — he was not alone at midnight — can only be proven if the other person admits the affair."
             },
             "ability": {
                 "name": {"de": "Das Alibi", "en": "The Alibi"},
-                "description": {"de": "Du warst nicht allein. Du kannst deinen geheimen Partner um Bestätigung bitten — aber nur einmal, per Privatnachricht in der App. Er oder sie entscheidet ob sie dich decken. Tun sie es nicht, wirst du automatisch der Hauptverdächtige.",
-                "en": "You were not alone. You can ask your secret partner for confirmation — but only once, via private message in the app. They decide whether to cover for you. If they don't, you automatically become the prime suspect."}
+                "description": {
+                    "de": "Du kannst deinen geheimen Partner per App-Nachricht um Bestätigung bitten — einmal. Er entscheidet ob er dich deckt.",
+                    "en": "You can ask your secret partner via app message for confirmation — once. They decide whether to cover for you."
+                }
             },
             "win_condition": {
-                "de": "Du überlebst wenn dein Alibi bestätigt wird ODER wenn der echte Mörder gefasst wird ohne dass deine Affäre öffentlich wird.",
-                "en": "You survive if your alibi is confirmed OR if the real murderer is caught without your affair becoming public."
+                "de": "Überlebe wenn dein Alibi bestätigt wird ODER wenn der echte Mörder gefasst wird ohne dass deine Affäre öffentlich wird.",
+                "en": "Survive if your alibi is confirmed OR if the real murderer is caught without your affair becoming public."
             },
             "murderer_motive_if_assigned": {
-                "de": "Der Baron entdeckte die Affäre. Er drohte mit Veröffentlichung. Viktor konnte nicht zulassen dass sein Ruf — und der seiner Geliebten — vernichtet wurde.",
-                "en": "The Baron discovered the affair. He threatened to publicize it. Viktor could not allow his reputation — and that of his lover — to be destroyed."
+                "de": "Der Baron entdeckte die Affäre und drohte mit Veröffentlichung. Viktor konnte das nicht zulassen.",
+                "en": "The Baron discovered the affair and threatened to publicize it. Viktor could not allow that."
             },
             "clues_i_hold": ["business_contract", "affair_evidence"],
             "starting_knowledge": {
-                "de": "Du weißt: Eine andere Person am Tisch ist dein/e Geliebte/r. Die App hat euch beide informiert wer das ist. Ihr müsst das geheim halten — aber auch voneinander lernen.",
-                "en": "You know: one other person at this table is your secret lover. The app has informed you both who that is. You must keep it secret — but also learn from each other."
-            }
-        },
-
-        "heir": {
-            "name": {"de": "Maximilian, der Erbe", "en": "Maximilian, the Heir"},
-            "min_players": 8,
-            "can_be_murderer": True,
-            "intro": {
-                "de": "Maximilian von Furst. Ich bin durch Heirat mit dem Dunkelbach-Clan verbunden. Der Baron war mein Onkel durch Adoption. Ich komme selten her — aber heute musste ich.",
-                "en": "Maximilian von Furst. I am connected to the Dunkelbach clan by marriage. The Baron was my uncle by adoption. I rarely come here — but today I had to."
-            },
-            "appearance": {
-                "de": "Ungepflegt für einen Mann seines Standes. Trinkt zu schnell. Hat jemanden mitgebracht — einen Anwalt, der draußen wartet.",
-                "en": "Unkempt for a man of his standing. Drinks too quickly. Has brought someone — a lawyer who waits outside."
-            },
-            "secret": {
-                "de": "Ich bin tief verschuldet. Der Baron war die einzige Person die mich hätte retten können. Ich kam heute um ihn um Geld zu bitten. Er sagte nein. Er lachte mich an.",
-                "en": "I am deeply in debt. The Baron was the only person who could have saved me. I came today to ask him for money. He said no. He laughed at me."
-            },
-            "ability": {
-                "name": {"de": "Der Anwalt", "en": "The Lawyer"},
-                "description": {"de": "Du hast einen Anwalt dabei. Einmal kannst du ihn rufen. Er erscheint und liest das Testament vor — das echte, aktuelle Testament. Das verändert alles. Aber Vorsicht: Der Inhalt könnte dich ruinieren.",
-                "en": "You have a lawyer with you. Once you may call him. He appears and reads the will — the real, current will. That changes everything. But beware: the contents could ruin you."}
-            },
-            "win_condition": {
-                "de": "Du gewinnst wenn das Testament nicht verlesen wird ODER wenn deine Schulden darin erwähnt werden aber der Mörder trotzdem gefasst wird. Du verlierst wenn das Testament verlesen wird und deine Demütigung öffentlich wird.",
-                "en": "You win if the will is not read OR if your debts are mentioned in it but the murderer is still caught. You lose if the will is read and your humiliation becomes public."
-            },
-            "murderer_motive_if_assigned": {
-                "de": "Maximilian tötete den Baron bevor er das Testament unterzeichnen konnte. Das alte Testament — das er noch nicht ändern konnte — macht Maximilian reich. Wenn das neue Testament existiert, ist er ruiniert.",
-                "en": "Maximilian killed the Baron before he could sign the will. The old will — which he hadn't changed yet — makes Maximilian rich. If the new will exists, he is ruined."
-            },
-            "clues_i_hold": ["debt_documents", "old_will"],
-            "starting_knowledge": {
-                "de": "Du weißt: Das alte Testament begünstigt dich. Das neue — das du gesehen hast bevor der Baron es unterschreiben konnte — nicht. Du musst verhindern dass es unterschrieben oder gefunden wird.",
-                "en": "You know: the old will favours you. The new one — which you saw before the Baron could sign it — does not. You must prevent it from being signed or found."
+                "de": "Die App teilt dir und deinem/r Geliebten mit wer ihr gegenseitiger Partner seid. Haltet es geheim.",
+                "en": "The app tells you and your lover who your mutual partner is. Keep it secret."
             }
         },
 
         "shadow": {
-            "name": {"de": "Die Schatten-Figur", "en": "The Shadow"},
+            "name": {"de": "Die Schattenfigur", "en": "The Shadow"},
             "min_players": 6,
             "can_be_murderer": False,
             "is_wildcard": True,
@@ -356,607 +370,529 @@ SCENARIO = {
                 "en": "I am... nobody special. A guest. Forget me."
             },
             "appearance": {
-                "de": "Unauffällig. Das ist Absicht. Aber wer genau hinschaut sieht: diese Person beobachtet alles sehr genau.",
-                "en": "Inconspicuous. That's intentional. But those who look carefully see: this person is watching everything very closely."
+                "de": "Unauffällig — das ist Absicht. Beobachtet alles sehr genau.",
+                "en": "Inconspicuous — intentionally. Observes everything very carefully."
             },
             "secret": {
-                "de": "Du bist kein Gast. Du bist ein Erpresser. Du weißt über die meisten Personen am Tisch etwas Belastendes. Du bist heute Abend hier um das neue Testament zu stehlen — und zu vernichten. Du schuldest jemandem Geld. Viel Geld.",
-                "en": "You are not a guest. You are a blackmailer. You know something damaging about most people at the table. You are here tonight to steal the new will — and destroy it. You owe someone money. A lot of money."
+                "de": "Du bist ein Erpresser. Du hast Belastendes über drei Personen am Tisch. Du willst das Testament stehlen — für einen Auftraggeber der draußen wartet.",
+                "en": "You are a blackmailer. You have damaging information about three people at the table. You want to steal the will — for a client waiting outside."
             },
             "ability": {
-                "name": {"de": "Der Diebstahl", "en": "The Theft"},
+                "name": {"de": "Das Testament stehlen", "en": "Steal the Will"},
                 "description": {
-                    "de": "Du hast eine einzige spezielle Aktion: Das Testament stehlen. Wenn du weißt wo es liegt (Hinweis durch Beobachten anderer), kannst du in der App 'Testament stehlen' auswählen. Wenn du dabei unentdeckt bleibst: Du gewinnst. Wird du entdeckt: Du verlierst sofort.",
-                    "en": "You have one special action: steal the will. If you know where it is (by observing others), you can select 'Steal will' in the app. If you remain undiscovered: You win. If you're caught: You lose immediately."
+                    "de": "Wenn du weißt wo das Testament liegt kannst du 'Testament stehlen' in der App wählen. Unentdeckt: Du gewinnst sofort. Entdeckt: Du verlierst sofort.",
+                    "en": "If you know where the will is you can select 'Steal will' in the app. Undiscovered: you win immediately. Discovered: you lose immediately."
                 }
             },
             "win_condition": {
-                "de": "DU GEWINNST NUR wenn du das Testament stiehlst UND zerstörst ohne entdeckt zu werden. Das ist schwer. Das soll schwer sein. Dein Sieg beeinflusst alle anderen — das Spiel geht weiter aber das Testament existiert nicht mehr.",
-                "en": "YOU WIN ONLY if you steal the will AND destroy it without being discovered. This is hard. It should be hard. Your victory affects everyone — the game continues but the will no longer exists."
+                "de": "Das Testament stehlen ohne entdeckt zu werden. Das ist sehr schwer.",
+                "en": "Steal the will without being discovered. This is very hard."
             },
             "clues_i_hold": ["blackmail_files"],
             "starting_knowledge": {
-                "de": "Du weißt über 3 Personen am Tisch etwas Belastendes. Die App zeigt dir diese Infos privat. Du entscheidest welche du nutzt — aber jede Nutzung macht dich sichtbarer.",
-                "en": "You know something damaging about 3 people at the table. The app shows you this info privately. You decide which to use — but each use makes you more visible."
-            }
-        },
-
-        "medium": {
-            "name": {"de": "Eleonore, das Medium", "en": "Eleonore, the Medium"},
-            "min_players": 9,
-            "can_be_murderer": False,
-            "intro": {
-                "de": "Eleonore Baum. Der Baron lud mich ein um... nun. Er glaubte an das Übernatürliche. Ich tue es nicht. Aber ich spielte das Spiel für ihn. Und heute Nacht — ich höre ihn. Ich höre ihn wirklich.",
-                "en": "Eleonore Baum. The Baron invited me to... well. He believed in the supernatural. I don't. But I played along for him. And tonight — I hear him. I really hear him."
-            },
-            "appearance": {
-                "de": "Hat immer die Augen halb geschlossen. Spricht in Rätseln. Niemand weiß ob es Schauspiel oder Ernst ist.",
-                "en": "Always has eyes half-closed. Speaks in riddles. Nobody knows if it's theatre or serious."
-            },
-            "secret": {
-                "de": "Eleonore hört den Toten nicht wirklich — aber sie hat etwas im Zimmer des Barons gefunden. Etwas das sie sich nicht erklären kann. Und sie hat Angst.",
-                "en": "Eleonore doesn't really hear the dead — but she found something in the Baron's room. Something she can't explain. And she's afraid."
-            },
-            "ability": {
-                "name": {"de": "Die Botschaft", "en": "The Message"},
-                "description": {
-                    "de": "Einmal im Spiel kannst du eine 'Botschaft vom Toten' übermitteln. Diese Botschaft ist echt — sie enthält einen echten Hinweis den nur du kennst. Aber du darfst nicht erklären woher du ihn hast. Glaubt man dir — großes Momentum. Glaubt man dir nicht — du wirst verdächtig.",
-                    "en": "Once in the game you may deliver a 'message from the dead'. This message is real — it contains a real clue only you know. But you may not explain where you got it. If believed — huge momentum. If not — you become suspicious."
-                }
-            },
-            "win_condition": {
-                "de": "Du gewinnst wenn deine Botschaft zum Fassen des Mörders beiträgt UND du nicht als Scharlatan entlarvt wirst.",
-                "en": "You win if your message contributes to catching the murderer AND you're not exposed as a charlatan."
-            },
-            "clues_i_hold": ["barons_journal", "hidden_room_key"],
-            "starting_knowledge": {
-                "de": "Du fandst im Zimmer des Barons ein verstecktes Tagebuch. Du hast nur die letzte Seite gelesen. Sie enthält den Namen einer Person — aber dieser Name könnte der Mörder oder das Opfer eines anderen Plans sein.",
-                "en": "You found a hidden diary in the Baron's room. You only read the last page. It contains a name — but this name could be the murderer or the victim of another plan."
-            }
-        },
-
-        "journalist": {
-            "name": {"de": "Frederic, der Journalist", "en": "Frederic, the Journalist"},
-            "min_players": 10,
-            "can_be_murderer": True,
-            "intro": {
-                "de": "Frederic Haas, Redakteur der Münchner Zeitung. Der Baron ist eine öffentliche Person — sein Tod ist eine Geschichte. Eine sehr gute Geschichte.",
-                "en": "Frederic Haas, editor of the Munich Gazette. The Baron is a public figure — his death is a story. A very good story."
-            },
-            "appearance": {
-                "de": "Hat immer Block und Stift in der Hand. Stellt Fragen auch wenn niemand antwortet. Hat keine Hemmungen.",
-                "en": "Always has notebook and pen in hand. Asks questions even when nobody answers. Has no inhibitions."
-            },
-            "secret": {
-                "de": "Frederic schrieb bereits den Artikel — bevor der Baron starb. Er wusste was passieren würde. Jemand hatte ihn informiert. Er verkauft diese Information nicht — weil er Angst hat. Großer Angst.",
-                "en": "Frederic had already written the article — before the Baron died. He knew what would happen. Someone had informed him. He's not selling this information — because he's afraid. Very afraid."
-            },
-            "ability": {
-                "name": {"de": "Die Enthüllung", "en": "The Revelation"},
-                "description": {
-                    "de": "Du kannst jederzeit eine 'Pressemitteilung' machen — eine öffentliche Enthüllung an alle. Diese Enthüllung enthält einen echten Fakt. Aber: Jede Enthüllung macht dich zum Ziel. Der Mörder wird versuchen dich zu diskreditieren.",
-                    "en": "At any time you may make a 'press statement' — a public announcement to everyone. This contains a real fact. But: each revelation makes you a target. The murderer will try to discredit you."
-                }
-            },
-            "win_condition": {
-                "de": "Du gewinnst wenn du ZUERST den Mörder öffentlich benennst. Du verlierst wenn du den falschen Mörder nennst.",
-                "en": "You win if you're FIRST to publicly name the murderer. You lose if you name the wrong murderer."
-            },
-            "murderer_motive_if_assigned": {
-                "de": "Frederic war kein Journalist. Er war ein Erpresser mit Presseausweis. Der Baron hatte ihn enttarnt. Der Artikel war sein letzter Versuch Druck auszuüben.",
-                "en": "Frederic was not a journalist. He was a blackmailer with a press pass. The Baron had exposed him. The article was his last attempt to apply pressure."
-            },
-            "clues_i_hold": ["article_draft", "informant_letter"],
-            "starting_knowledge": {
-                "de": "Du weißt: Der Mord war geplant. Er war nicht spontan. Dein Informant nannte dir eine Zeit — kurz vor Mitternacht. Und einen Ort — die Bibliothek.",
-                "en": "You know: the murder was planned. It was not spontaneous. Your informant told you a time — just before midnight. And a place — the library."
+                "de": "Du hast Informationen über drei Personen. Die App zeigt sie dir privat. Jede Nutzung macht dich sichtbarer.",
+                "en": "You have information about three people. The app shows it to you privately. Each use makes you more visible."
             }
         }
     },
 
     # ─────────────────────────────────────────────────────────────────────────
-    # HINWEISE (Clues)
-    # ─────────────────────────────────────────────────────────────────────────
-    "clues": {
-        "key_cellar": {
-            "name": {"de": "Schlüssel zum Weinkeller", "en": "Wine Cellar Key"},
-            "text": {"de": "Ein alter Messing-Schlüssel. Auf der Rückseite eingraviert: 'W-7'. Der Weinkeller — aber warum wäre das wichtig?", "en": "An old brass key. Engraved on the back: 'W-7'. The wine cellar — but why would that matter?"},
-            "unlocks": ["wine_cellar_content"],
-            "trigger": "butler_uses_ability"
-        },
-        "household_ledger": {
-            "name": {"de": "Das Haushaltsbuch", "en": "The Household Ledger"},
-            "text": {"de": "Seite 47 zeigt Abweichungen. Jemand hat Zahlen korrigiert — mit einer anderen Tinte. Die Korrekturen summieren sich auf 8.400 Mark über drei Jahre.", "en": "Page 47 shows discrepancies. Someone has corrected numbers — with different ink. The corrections add up to 8,400 marks over three years."},
-            "unlocks": ["butler_motive_confirmed"],
-            "trigger": "witness_finds_library"
-        },
-        "sealed_letter": {
-            "name": {"de": "Der versiegelte Brief (Constanze)", "en": "The Sealed Letter (Constanze)"},
-            "text": {"de": "Liebe Constanze, wenn du dies liest bin ich tot. Die Wahrheit über deine Mutter — und über mich — liegt in der Bibliothek. Drittes Regal, hinter Schiller. Verbrenne es nicht. —Aldric", "en": "Dear Constanze, if you read this I am dead. The truth about your mother — and about me — is in the library. Third shelf, behind Schiller. Do not burn it. —Aldric"},
-            "unlocks": ["library_schiller", "constanze_real_heritage"],
-            "trigger": "niece_opens_letter"
-        },
-        "cause_of_death": {
-            "name": {"de": "Todesursache (Dr. Voss)", "en": "Cause of Death (Dr. Voss)"},
-            "text": {"de": "Herzversagen — aber die Pupillen sind erweitert. Das ist nicht typisch. Entweder starke Aufregung oder... Digitalis. In zu hoher Dosis. Das Herzmedikament des Barons selbst.", "en": "Heart failure — but the pupils are dilated. That's not typical. Either strong agitation or... Digitalis. In too high a dose. The Baron's own heart medication."},
-            "unlocks": ["digitalis_source", "medication_bottle"],
-            "trigger": "doctor_examines_body"
-        },
-        "kitchen_substance": {
-            "name": {"de": "Das Küchenpäckchen", "en": "The Kitchen Package"},
-            "text": {"de": "Ein kleines Päckchen weißes Pulver. Geruchlos. Die Köchin sagt: 'Es war Herzstärkendes. So wurde es mir gesagt.' Der Arzt wird das anders sehen.", "en": "A small package of white powder. Odourless. The cook says: 'It was a heart tonic. That's what I was told.' The doctor will see it differently."},
-            "unlocks": ["digitalis_confirmed", "cook_payment"],
-            "trigger": "cook_reveals_truth"
-        },
-        "payment_receipt": {
-            "name": {"de": "Die Quittung", "en": "The Receipt"},
-            "text": {"de": "200 Mark. Kein Name. Datum: Heute. Ausgestellt in einer Gasthausschrift die nach München riecht.", "en": "200 marks. No name. Date: today. Written in an inn handwriting that smells of Munich."},
-            "unlocks": ["who_paid_cook"],
-            "trigger": "cook_found_with_money"
-        },
-        "surveillance_file": {
-            "name": {"de": "Die Observationsakte", "en": "The Surveillance File"},
-            "text": {"de": "12 Seiten über eine Person am Tisch. Zeiten, Orte, Kontakte. Darunter ein Name der immer wieder auftaucht — ein Name den niemand sonst kennt.", "en": "12 pages on one person at the table. Times, places, contacts. Including a name that appears repeatedly — a name nobody else knows."},
-            "unlocks": ["stranger_target_revealed"],
-            "trigger": "stranger_chooses_to_reveal"
-        },
-        "baron_letter": {
-            "name": {"de": "Der Brief des Barons (Inspektor)", "en": "The Baron's Letter (Inspector)"},
-            "text": {"de": "Auf dem Briefkopf des Barons: 'Ich fürchte [ROLLE]. Sie wissen zu viel. Wenn mir etwas passiert — Bibliothek, unter dem Teppich, dritte Bodendiele.' Datum: Gestern.", "en": "On the Baron's letterhead: 'I fear [ROLE]. They know too much. If something happens to me — library, under the carpet, third floorboard.' Date: yesterday."},
-            "unlocks": ["library_floorboard"],
-            "trigger": "inspector_arrives",
-            "dynamic": True,
-            "dynamic_field": "feared_person"
-        },
-        "telegram_copy": {
-            "name": {"de": "Telegramm-Kopie", "en": "Telegram Copy"},
-            "text": {"de": "HEUTE NACHT WIRD ALLES ENDEN STOP ICH HABE ALLES STOP DU WEISST WAS ZU TUN IST STOP — KEIN ABSENDER", "en": "TONIGHT EVERYTHING ENDS STOP I HAVE EVERYTHING STOP YOU KNOW WHAT TO DO STOP — NO SENDER"},
-            "unlocks": ["telegram_sender_investigation"],
-            "trigger": "stranger_investigates_study"
-        },
-        "medical_bag": {
-            "name": {"de": "Die Arzttasche", "en": "The Doctor's Bag"},
-            "text": {"de": "Standard-Ausrüstung — aber eine Spritze fehlt. Die Schachtel Digitalis ist offen. Zwei Tabletten fehlen. Das ist seltsam für einen Arzt der nur zum Dinner eingeladen war.", "en": "Standard equipment — but one syringe is missing. The box of digitalis is open. Two tablets are missing. That's odd for a doctor only invited to dinner."},
-            "unlocks": ["doctor_motive_hint"],
-            "trigger": "detective_examines_bag"
-        },
-        "wine_cellar_content": {
-            "name": {"de": "Inhalt des Weinkellers", "en": "Wine Cellar Contents"},
-            "text": {"de": "Hinter Reihe W-7: Ein Tresor. Darin ein Umschlag beschriftet mit 'Für den Fall meines Todes'. Und ein zweites Testament. Handgeschrieben. Heute datiert. Noch nicht unterschrieben.", "en": "Behind row W-7: a safe. Inside an envelope labelled 'In case of my death'. And a second will. Handwritten. Dated today. Not yet signed."},
-            "unlocks": ["unsigned_will_found", "shadow_alert"],
-            "trigger": "key_used_in_cellar"
-        },
-        "library_schiller": {
-            "name": {"de": "Hinter dem Schiller", "en": "Behind the Schiller"},
-            "text": {"de": "Ein Foto. Der Baron mit einer Frau — Constanzes Mutter. Und ein Kind das nicht Constanze ist. Ein Kind das jemand anderes am Tisch sein könnte.", "en": "A photograph. The Baron with a woman — Constanze's mother. And a child that is not Constanze. A child that could be someone else at the table."},
-            "unlocks": ["barons_secret_child", "real_heir_revealed"],
-            "trigger": "niece_finds_clue"
-        },
-        "blackmail_files": {
-            "name": {"de": "Die Erpressungsakten (Schatten)", "en": "The Blackmail Files (Shadow)"},
-            "text": {"de": "Drei Dossiers. Drei Personen. Drei Geheimnisse. Jede Information allein wäre vernichtend — zusammen ist es ein Mosaik das auf den Mörder zeigt.", "en": "Three dossiers. Three people. Three secrets. Each piece of information alone would be damning — together it's a mosaic that points to the murderer."},
-            "unlocks": ["shadow_knows_murderer"],
-            "trigger": "shadow_observes_long_enough",
-            "private_to_shadow": True
-        },
-        "barons_journal": {
-            "name": {"de": "Das geheime Tagebuch des Barons", "en": "The Baron's Secret Journal"},
-            "text": {"de": "Letzte Eintragung: 'Heute Abend werde ich alles klären. Ich werde [NAME] konfrontieren. Wenn ich recht habe — und ich habe recht — dann ist mein Leben in Gefahr. Eleonore weiß was zu tun ist.'", "en": "Last entry: 'Tonight I will settle everything. I will confront [NAME]. If I am right — and I am right — then my life is in danger. Eleonore knows what to do.'"},
-            "unlocks": ["baron_knew_murderer"],
-            "trigger": "medium_shares_message",
-            "dynamic": True,
-            "dynamic_field": "feared_person"
-        }
-    },
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # REAL-WELT AUFGABEN (Physical Tasks)
+    # PHYSISCHE AUFGABEN
     # ─────────────────────────────────────────────────────────────────────────
     "physical_tasks": {
 
+        # ── STANDARD AUFGABEN ───────────────────────────────────────────────
+
         "task_bathroom": {
-            "id": "task_bathroom",
-            "trigger_phase": 1,
-            "trigger_condition": "game_started_5min",
+            "trigger_phase": 1, "trigger_condition": "game_started_5min",
             "assigned_to": "random_non_murderer",
             "instruction": {
-                "de": "🚶 GEHEIMAUFTRAG: Geh jetzt ins Badezimmer — allein. Schau hinter dem Spiegel nach (oder unter dem Waschbecken, wo der Host vorher etwas versteckt hat). Du findest dort etwas. Bring es mit. Zeig es NIEMANDEM sofort. Wenn jemand fragt wo du warst: Du hast dein Telefon geladen.",
-                "en": "🚶 SECRET MISSION: Go to the bathroom now — alone. Look behind the mirror (or under the sink, where the host hid something earlier). You'll find something there. Bring it. Show it to NOBODY immediately. If asked where you were: you were charging your phone."
+                "de": "🚶 GEHEIMAUFTRAG: Geh jetzt allein ins Badezimmer. Schau hinter dem Spiegel nach. Du findest etwas — bring es mit. Wenn jemand fragt wo du warst: Du hast dein Telefon geladen.",
+                "en": "🚶 SECRET MISSION: Go to the bathroom alone now. Look behind the mirror. You'll find something — bring it back. If asked where you were: you were charging your phone."
             },
             "what_they_find": {
-                "de": "Ein gefaltetes Papier mit: 'Der Baron sagte mir: Wer auch immer nach meinem Tod ZUERST nach meiner Bibliothek fragt — der hat etwas zu verbergen.'",
-                "en": "A folded piece of paper: 'The Baron told me: Whoever is FIRST to ask about my library after my death — has something to hide.'"
+                "de": "Ein Zettel: 'Wer als erstes nach der Bibliothek fragt hat etwas zu verbergen — Baron Aldric'",
+                "en": "A note: 'Whoever is first to ask about the library has something to hide — Baron Aldric'"
             },
             "game_effect": "library_first_asker_flagged"
         },
 
-        "task_drinking": {
-            "id": "task_drinking",
-            "trigger_phase": 1,
-            "trigger_condition": "first_10_minutes",
+        "task_drink_three": {
+            "trigger_phase": 1, "trigger_condition": "first_10_minutes",
             "assigned_to": "witness",
             "instruction": {
-                "de": "🍷 ERINNERUNGSAUFTRAG: Trinke innerhalb der nächsten 3 Minuten dreimal von deinem Glas. Beim DRITTEN Schluck schaust du der Person direkt gegenüber in die Augen — ohne wegzusehen — für 5 Sekunden. Was siehst du? Das schärft deine Erinnerung an die Nacht.",
-                "en": "🍷 MEMORY TASK: Drink from your glass three times in the next 3 minutes. On the THIRD sip, look directly into the eyes of the person across from you — without looking away — for 5 seconds. What do you see? This sharpens your memory of the night."
+                "de": "🍷 ERINNERUNGSAUFTRAG: Trinke in den nächsten 3 Minuten dreimal von deinem Glas. Beim dritten Schluck: Schau der Person direkt gegenüber 5 Sekunden in die Augen ohne wegzusehen.",
+                "en": "🍷 MEMORY TASK: Drink from your glass three times in the next 3 minutes. On the third sip: look directly into the eyes of the person across from you for 5 seconds without looking away."
             },
-            "game_effect": "witness_receives_vision_clue",
+            "game_effect": "witness_clue_sharpened",
             "clue_revealed": {
-                "de": "Deine Erinnerung schärft sich: Die Silhouette die du saHst — sie trug etwas. In der rechten Hand. Etwas Langes, Dünnes. Eine Spritze? Ein Messer? Ein Schlüssel?",
-                "en": "Your memory sharpens: the silhouette you saw — they were carrying something. In the right hand. Something long, thin. A syringe? A knife? A key?"
+                "de": "Deine Erinnerung schärft sich: Die Silhouette hielt etwas Langes Dünnes — eine Spritze? Ein Messer? Ein Schlüssel? Und sie stand auf der linken Seite der Bibliothekstür.",
+                "en": "Your memory sharpens: the silhouette held something long and thin — a syringe? A knife? A key? And they stood on the left side of the library door."
             }
         },
 
         "task_whisper": {
-            "id": "task_whisper",
-            "trigger_phase": 1,
-            "trigger_condition": "random_15min",
+            "trigger_phase": 1, "trigger_condition": "random_15min",
             "assigned_to": "random",
             "instruction": {
-                "de": "🗣️ FLÜSTERAUFTRAG: Lehne dich unauffällig zur Person links von dir und flüstere ihr ins Ohr: 'Der Baron hatte einen Feind den niemand kannte.' Sag nicht von wem das kommt. Beobachte ihre Reaktion genau.",
-                "en": "🗣️ WHISPER TASK: Casually lean toward the person to your left and whisper: 'The Baron had an enemy nobody knew about.' Don't say where it comes from. Watch their reaction carefully."
+                "de": "🗣️ FLÜSTERAUFTRAG: Lehne dich unauffällig zur Person links von dir und flüstere: 'Der Baron hatte einen Feind den niemand kannte.' Beobachte die Reaktion genau. Sag nie von wem das kommt.",
+                "en": "🗣️ WHISPER TASK: Casually lean toward the person to your left and whisper: 'The Baron had an enemy nobody knew about.' Watch their reaction carefully. Never say where it comes from."
             },
-            "game_effect": "reaction_logged_for_murderer_check"
+            "game_effect": "reaction_logged"
         },
 
-        "task_glass": {
-            "id": "task_glass",
-            "trigger_phase": 2,
-            "trigger_condition": "body_discovered_plus_5min",
+        "task_barons_glass": {
+            "trigger_phase": 2, "trigger_condition": "body_discovered",
             "assigned_to": "doctor",
             "instruction": {
-                "de": "🥃 ARZT-AUFGABE: Geh zur Tischseite wo das Glas des Barons stand. Hebe es auf (es liegt jetzt auf dem Boden oder wurde umgestellt). Rieche daran. Du weißt was du riechst. Du weißt es sehr gut. Verkünde NUR wenn du bereit bist was du riechst — aber noch nicht die Bedeutung.",
-                "en": "🥃 DOCTOR'S TASK: Go to the table side where the Baron's glass stood. Pick it up (it's now on the floor or was moved). Smell it. You know what you smell. You know it very well. Only announce when you're ready what you smell — but not yet the significance."
+                "de": "🥃 ARZTAUFGABE: Geh zu dem Stuhl wo der Baron saß. Das Glas des Barons liegt dort. Hebe es auf. Rieche daran — langsam. Du weißt was du riechst. Verkünde laut was du riechst — aber noch nicht was es bedeutet.",
+                "en": "🥃 DOCTOR'S TASK: Go to the chair where the Baron sat. The Baron's glass is there. Pick it up. Smell it — slowly. You know what you smell. Announce aloud what you smell — but not yet what it means."
             },
-            "game_effect": "glass_smell_clue_revealed"
+            "game_effect": "glass_clue_revealed"
         },
 
-        "task_stand_window": {
-            "id": "task_stand_window",
-            "trigger_phase": 2,
-            "trigger_condition": "investigation_begins",
+        "task_window": {
+            "trigger_phase": 2, "trigger_condition": "investigation_begins",
             "assigned_to": "stranger",
             "instruction": {
-                "de": "👁️ OBSERVATIONSAUFGABE: Steh auf und geh zum Fenster. Schau 30 Sekunden hinaus — ohne zu reden. Danach sagst du laut: 'Jemand war draußen.' Und setzt dich. Kein weiteres Wort dazu.",
-                "en": "👁️ OBSERVATION TASK: Stand up and go to the window. Look outside for 30 seconds — without speaking. Then say out loud: 'Someone was outside.' And sit down. No further word about it."
+                "de": "👁️ OBSERVATIONSAUFGABE: Steh auf. Geh zum Fenster. Schau 30 Sekunden hinaus ohne zu reden. Dann sag laut: 'Jemand war draußen.' Setz dich. Kein weiteres Wort.",
+                "en": "👁️ OBSERVATION TASK: Stand up. Go to the window. Look outside for 30 seconds without speaking. Then say aloud: 'Someone was outside.' Sit down. No further word."
             },
-            "game_effect": "outdoor_presence_revealed",
-            "note": "This is theatric — but it will make the murderer very nervous if they used the garden."
+            "game_effect": "outdoor_presence_revealed"
         },
 
-        "task_note_suspect": {
-            "id": "task_note_suspect",
-            "trigger_phase": 3,
-            "trigger_condition": "midgame",
+        "task_secret_vote": {
+            "trigger_phase": 2, "trigger_condition": "midgame_20min",
             "assigned_to": "all",
             "instruction": {
-                "de": "📝 GEHEIMABSTIMMUNG: Alle schreiben jetzt auf einen Zettel den Namen der Person die sie am meisten verdächtigen. Faltet den Zettel. Gebt ihn dem Host. Noch kein Ergebnis — aber der Host sieht ob der Mörder nervös wird wenn er den eigenen Namen sieht.",
-                "en": "📝 SECRET VOTE: Everyone now writes on a piece of paper the name of the person they most suspect. Fold it. Give it to the host. No result yet — but the host can see if the murderer gets nervous seeing their own name."
+                "de": "📝 GEHEIMZETTEL: Alle schreiben jetzt den Namen der Person die sie am meisten verdächtigen auf einen Zettel. Faltet ihn. Gebt ihn dem Host. Kein Ergebnis — nur der Host sieht die Zettel.",
+                "en": "📝 SECRET NOTE: Everyone now writes the name of the person they most suspect on a piece of paper. Fold it. Give it to the host. No result — only the host sees the notes."
             },
-            "game_effect": "mid_game_suspicion_snapshot",
-            "note": "Host reads privately, does not reveal results yet. This is information for the host only."
+            "game_effect": "suspicion_snapshot"
         },
 
         "task_knock": {
-            "id": "task_knock",
-            "trigger_phase": 2,
-            "trigger_condition": "random_after_murder",
+            "trigger_phase": 2, "trigger_condition": "random_after_murder",
             "assigned_to": "shadow",
             "instruction": {
-                "de": "✊ SIGNAL: Klopfe dreimal auf den Tisch. Warte. Wenn jemand zurückklopft — auch dreimal — ist das dein stiller Verbündeter. Wenn niemand zurückklopft in 10 Sekunden: Du bist allein.",
-                "en": "✊ SIGNAL: Knock three times on the table. Wait. If someone knocks back — also three times — they are your silent ally. If nobody knocks back in 10 seconds: you are alone."
+                "de": "✊ SIGNAL: Klopfe dreimal auf den Tisch. Warte 10 Sekunden. Wenn jemand zurückklopft: Das ist dein stiller Verbündeter. Wenn niemand: Du bist allein.",
+                "en": "✊ SIGNAL: Knock three times on the table. Wait 10 seconds. If someone knocks back: they are your silent ally. If nobody: you are alone."
             },
-            "game_effect": "shadow_ally_possibly_revealed",
-            "note": "No ally exists — this is a test. If someone DOES knock back (by chance), it creates massive suspicion on them."
+            "game_effect": "shadow_ally_test"
         },
 
-        "task_empty_glass": {
-            "id": "task_empty_glass",
-            "trigger_phase": 3,
-            "trigger_condition": "investigation_midpoint",
+        "task_detective_signal": {
+            "trigger_phase": 3, "trigger_condition": "investigation_midpoint",
             "assigned_to": "detective",
             "instruction": {
-                "de": "🔍 DETEKTIV-SIGNAL: Stelle dein Glas auffällig leer auf den Tisch wenn du glaubst den Mörder zu kennen. Dies ist ein Signal an alle dass du kurz vor einer Enthüllung bist. Der Mörder weiß dann dass du heiß bist — und wird reagieren. Beobachte die Reaktionen.",
-                "en": "🔍 DETECTIVE SIGNAL: Place your glass conspicuously empty on the table when you believe you know the murderer. This signals to everyone you're close to a revelation. The murderer will know you're hot — and will react. Observe the reactions."
+                "de": "🔍 DETEKTIVSIGNAL: Stelle dein Glas demonstrativ leer auf den Tisch wenn du glaubst den Mörder zu kennen. Das signalisiert allen dass du nah dran bist. Der Mörder wird nervös reagieren.",
+                "en": "🔍 DETECTIVE SIGNAL: Place your glass conspicuously empty on the table when you believe you know the murderer. This signals to everyone you are close. The murderer will react nervously."
             },
-            "game_effect": "murderer_alert_triggered"
+            "game_effect": "murderer_alert"
         },
 
-        "task_confession_moment": {
-            "id": "task_confession_moment",
-            "trigger_phase": 3,
-            "trigger_condition": "cook_under_pressure",
+        "task_cook_confession": {
+            "trigger_phase": 2, "trigger_condition": "cook_under_pressure",
             "assigned_to": "cook",
             "instruction": {
-                "de": "😰 DER MOMENT DER WAHRHEIT: Du bist unter Druck. Alle schauen dich an. Trinke jetzt langsam von deinem Glas — einen langen Schluck. Wenn du willst dass jemand mit dir redet, stelle dein Glas ab UND legst die Hände flach auf den Tisch. Das ist ein Zeichen dass du reden willst — aber nur mit einer Person.",
-                "en": "😰 MOMENT OF TRUTH: You're under pressure. Everyone is watching. Drink slowly from your glass now — one long sip. If you want someone to talk to you, set your glass down AND place your hands flat on the table. That's a signal you want to talk — but to only one person."
+                "de": "😰 MOMENT DER WAHRHEIT: Du bist unter Druck. Trinke jetzt langsam von deinem Glas. Wenn du mit jemandem reden willst: Hände flach auf den Tisch legen. Das ist ein Zeichen — nur für eine Person.",
+                "en": "😰 MOMENT OF TRUTH: You are under pressure. Drink slowly from your glass now. If you want to talk to someone: place both hands flat on the table. That's a signal — for one person only."
             },
             "game_effect": "cook_confession_available"
         },
 
-        "task_cold_reading": {
-            "id": "task_cold_reading",
-            "trigger_phase": 2,
-            "trigger_condition": "medium_activated",
+        "task_medium_eyes": {
+            "trigger_phase": 2, "trigger_condition": "medium_activated",
             "assigned_to": "medium",
             "instruction": {
-                "de": "🕯️ DIE BOTSCHAFT: Schließe kurz die Augen. 5 Sekunden. Dann öffne sie und schau langsam jeden am Tisch an. Sag: 'Ich höre ihn. Er sagt — jemand hier hat etwas in der Tasche das ihm gehörte.' Das ist wahr. Einer der Spieler hat tatsächlich einen Gegenstand des Barons. Wer das ist — weißt du nicht. Aber sie wissen es.",
-                "en": "🕯️ THE MESSAGE: Close your eyes briefly. 5 seconds. Then open them and look at everyone at the table slowly. Say: 'I hear him. He says — someone here has something in their pocket that belonged to him.' This is true. One player actually has an object of the Baron's. Who — you don't know. But they do."
+                "de": "🕯️ DIE BOTSCHAFT: Schließe die Augen — 5 Sekunden. Dann schau langsam jeden am Tisch an. Sag: 'Ich höre ihn. Er sagt — jemand hier hat etwas in der Tasche das ihm gehörte.' Das ist wahr.",
+                "en": "🕯️ THE MESSAGE: Close your eyes — 5 seconds. Then look at everyone at the table slowly. Say: 'I hear him. He says — someone here has something in their pocket that belonged to him.' This is true."
             },
-            "game_effect": "medium_clue_delivered"
+            "game_effect": "medium_clue"
+        },
+
+        # ── TRANK-AUFGABEN (Herzstück des Krimi Dinners) ────────────────────
+
+        "task_drink_clue": {
+            "trigger_phase": 1, "trigger_condition": "random_20min",
+            "assigned_to": "random",
+            "instruction": {
+                "de": "🍾 WEINHINWEIS: Trinke jetzt demonstrativ von deinem Glas — einen langen Schluck. Danach sagst du laut: 'Ausgezeichneter Jahrgang.' Wer auch immer zuerst auf deinen Kommentar reagiert — diese Person wird verdächtig. Beobachte wen.",
+                "en": "🍾 WINE CLUE: Drink demonstratively from your glass now — one long sip. Then say aloud: 'Excellent vintage.' Whoever reacts first to your comment — that person becomes suspicious. Note who."
+            },
+            "game_effect": "reaction_person_flagged"
+        },
+
+        "task_pour_wine": {
+            "trigger_phase": 1, "trigger_condition": "first_30min",
+            "assigned_to": "butler",
+            "instruction": {
+                "de": "🍷 BUTLERAUFGABE: Gieß dem Baron mehr Wein ein — demonstrativ. Füll auch mindestens zwei anderen nach. Wenn jemand ablehnt: Merke dir wer. Das wird wichtig.",
+                "en": "🍷 BUTLER TASK: Pour more wine for the Baron — demonstratively. Also refill at least two others. If someone declines: remember who. This will matter."
+            },
+            "game_effect": "wine_refusal_logged"
+        },
+
+        "task_toast": {
+            "trigger_phase": 1, "trigger_condition": "baron_death_minus_5min",
+            "assigned_to": "baron",
+            "instruction": {
+                "de": "🥂 DER LETZTE TOAST: Steh auf. Hebe dein Glas. Sag: 'Auf die Wahrheit — sie kommt immer ans Licht.' Alle müssen trinken. Beobachte wer zögert oder sein Glas nur an die Lippen hält ohne wirklich zu trinken.",
+                "en": "🥂 THE LAST TOAST: Stand up. Raise your glass. Say: 'To the truth — it always comes to light.' Everyone must drink. Observe who hesitates or only holds their glass to their lips without really drinking."
+            },
+            "game_effect": "toast_reaction_logged"
+        },
+
+        "task_drink_together": {
+            "trigger_phase": 2, "trigger_condition": "investigation_10min",
+            "assigned_to": "all",
+            "instruction": {
+                "de": "🍷 GEMEINSAM TRINKEN: Alle trinken gleichzeitig — auf drei. Wer NICHT trinkt hat etwas zu verbergen. Zähle im Kopf wer trinkt und wer nicht.",
+                "en": "🍷 DRINK TOGETHER: Everyone drinks simultaneously — on three. Whoever does NOT drink has something to hide. Count in your head who drinks and who does not."
+            },
+            "game_effect": "group_drink_refusal_tracked"
+        },
+
+        "task_suspicious_drink": {
+            "trigger_phase": 2, "trigger_condition": "random_post_murder",
+            "assigned_to": "witness",
+            "instruction": {
+                "de": "🍷 DEINE ERINNERUNG: Du erinnerst dich jetzt — die Silhouette die du sahst trank kurz vor Mitternacht. Du sahst es durch das Fenster. Finde heraus wer von allen zuletzt getrunken hat bevor der Schrei kam.",
+                "en": "🍷 YOUR MEMORY: You now remember — the silhouette you saw drank shortly before midnight. You saw it through the window. Find out who among all drank last before the scream came."
+            },
+            "game_effect": "witness_drinking_clue"
+        },
+
+        "task_wine_cellar_key": {
+            "trigger_phase": 2, "trigger_condition": "butler_uses_ability",
+            "assigned_to": "butler",
+            "instruction": {
+                "de": "🔑 DER KELLERKEY: Du hast den Schlüssel W-7 zum Weinkeller. Du entscheidest ob du ihn zeigst oder versteckst. Wenn du ihn zeigst: Jemand wird sehr nervös. Wenn du ihn versteckst: Du bist sicherer — aber der Mörder entkömmt vielleicht.",
+                "en": "🔑 THE CELLAR KEY: You have key W-7 to the wine cellar. You decide whether to show it or hide it. If you show it: someone will become very nervous. If you hide it: you are safer — but the murderer may escape."
+            },
+            "game_effect": "cellar_key_decision"
+        },
+
+        # ── MÖRDER-SPEZIFISCHE AUFGABEN ─────────────────────────────────────
+
+        "murderer_task_alibi": {
+            "trigger_phase": 2, "trigger_condition": "murder_announced",
+            "assigned_to": "murderer",
+            "instruction": {
+                "de": "🎭 MÖRDER-AUFGABE 1 — ALIBI: Du musst jetzt spontan erzählen wo du um Mitternacht warst. Dein Alibi muss glaubwürdig klingen. Wähle eine Person die du als 'Zeugen' nennst — ohne sie vorher zu fragen. Wenn sie widerspricht: Du musst sehr überzeugend sein.",
+                "en": "🎭 MURDERER TASK 1 — ALIBI: You must now spontaneously tell where you were at midnight. Your alibi must sound credible. Choose a person you name as 'witness' — without asking them first. If they contradict you: you must be very convincing."
+            },
+            "private": True,
+            "game_effect": "murderer_alibi_set"
+        },
+
+        "murderer_task_redirect": {
+            "trigger_phase": 2, "trigger_condition": "suspicion_rising_on_murderer",
+            "assigned_to": "murderer",
+            "instruction": {
+                "de": "🎭 MÖRDER-AUFGABE 2 — ABLENKUNG: Du wirst verdächtigt. Handle jetzt. Wähle eine unschuldige Person und weise alle subtil auf ein Detail hin das sie verdächtig macht. Sag nicht direkt 'Ich verdächtige X' — sei subtil. Z.B.: 'Ist euch aufgefallen dass [Person] nie aus dem gleichen Glas trinkt?'",
+                "en": "🎭 MURDERER TASK 2 — DISTRACTION: You are being suspected. Act now. Choose an innocent person and subtly point everyone to a detail that makes them suspicious. Don't say directly 'I suspect X' — be subtle. E.g.: 'Has anyone noticed that [person] never drinks from the same glass?'"
+            },
+            "private": True,
+            "game_effect": "red_herring_planted"
+        },
+
+        "murderer_task_drink_first": {
+            "trigger_phase": 1, "trigger_condition": "baron_proposes_toast",
+            "assigned_to": "murderer",
+            "instruction": {
+                "de": "🎭 MÖRDER-AUFGABE 3 — DER TOAST: Wenn der Baron toastet: Trinke als ERSTER und am MEISTEN. Demonstrativ. Das wird als Zeichen der Unschuld gesehen — du hast keine Angst vor dem Wein. Dabei musst du dir merken: Was hast du heute Nachmittag wirklich gemacht? Du wirst danach gefragt.",
+                "en": "🎭 MURDERER TASK 3 — THE TOAST: When the Baron toasts: drink FIRST and the MOST. Demonstratively. This will be seen as a sign of innocence — you're not afraid of the wine. While doing this remember: what did you really do this afternoon? You will be asked."
+            },
+            "private": True,
+            "game_effect": "murderer_drinking_pattern"
+        },
+
+        "murderer_task_question": {
+            "trigger_phase": 2, "trigger_condition": "investigation_5min",
+            "assigned_to": "murderer",
+            "instruction": {
+                "de": "🎭 MÖRDER-AUFGABE 4 — DIE FRAGE: Stelle der Gruppe jetzt eine Frage die den Verdacht von dir ablenkt. Eine gute Frage: 'Wer hat heute Nachmittag in der Bibliothek etwas gesucht?' oder 'Hat der Baron euch auch komisch angeschaut beim Dinner?' Beobachte wer nervös wird.",
+                "en": "🎭 MURDERER TASK 4 — THE QUESTION: Now ask the group a question that deflects suspicion from you. A good question: 'Who was looking for something in the library this afternoon?' or 'Did the Baron also look at you strangely during dinner?' Observe who gets nervous."
+            },
+            "private": True,
+            "game_effect": "murderer_deflection"
+        },
+
+        "murderer_task_sympathize": {
+            "trigger_phase": 2, "trigger_condition": "doctor_announces_cause",
+            "assigned_to": "murderer",
+            "instruction": {
+                "de": "🎭 MÖRDER-AUFGABE 5 — MITGEFÜHL: Reagiere jetzt auf die Todesursache des Arztes mit ÜBERTRIEBENER Betroffenheit. Steh auf. Sage: 'Das ist unglaublich. Wer tut so etwas?' Dann setz dich wieder. Übertriebene Reaktionen wirken echt wenn alle unter Schock stehen.",
+                "en": "🎭 MURDERER TASK 5 — SYMPATHY: React to the doctor's cause of death with EXAGGERATED concern. Stand up. Say: 'That is unbelievable. Who does something like that?' Then sit back down. Exaggerated reactions seem real when everyone is in shock."
+            },
+            "private": True,
+            "game_effect": "murderer_overreaction"
+        },
+
+        "murderer_task_help_someone": {
+            "trigger_phase": 2, "trigger_condition": "random_30min_after_murder",
+            "assigned_to": "murderer",
+            "instruction": {
+                "de": "🎭 MÖRDER-AUFGABE 6 — DER HELFER: Hilf jetzt aktiv einer anderen Person ihre Theorie zu entwickeln — einer Person die NICHT verdächtig ist. Zeige dich als kooperativ und hilfsbereit. Niemand verdächtigt jemanden der aktiv bei der Ermittlung hilft. Aber wähle weise wessen Theorie du stärkt.",
+                "en": "🎭 MURDERER TASK 6 — THE HELPER: Actively help another person develop their theory — a person who is NOT suspicious. Show yourself as cooperative and helpful. Nobody suspects someone who actively helps the investigation. But choose wisely whose theory you strengthen."
+            },
+            "private": True,
+            "game_effect": "murderer_cooperation_mask"
+        },
+
+        # ── PANIK-MOMENT FÜR DEN MÖRDER ──────────────────────────────────
+
+        "murderer_panic_moment": {
+            "trigger_phase": 3, "trigger_condition": "someone_gets_close_to_truth",
+            "assigned_to": "murderer",
+            "instruction": {
+                "de": "⚠️ PANIKMOMENT — LIES DIES NUR FÜR DICH: Jemand kommt der Wahrheit sehr nahe. Du musst JETZT eine Entscheidung treffen:\n\nOPTION A: Steh auf und sage laut: 'Ich muss etwas gestehen.' Dann... gestehe etwas Harmloses aber Belastendes — einen kleinen Fehler, eine Lüge, etwas das Zeit kostet und den Verdacht von der echten Tat ablenkt.\n\nOPTION B: Fange an zu weinen oder so zu tun als ob. Emotional zusammenbrechen. Niemand kann eine weinende Person befragen ohne sich schlecht zu fühlen.\n\nOPTION C: Lenke sofort auf eine andere Person — so direkt wie möglich. 'Ich habe etwas gesehen das ich nicht sagen wollte. [Person X] war nicht da wo sie/er behauptet war.'\n\nWähle jetzt. Du hast 60 Sekunden.",
+                "en": "⚠️ PANIC MOMENT — READ THIS ONLY FOR YOURSELF: Someone is getting very close to the truth. You must make a decision NOW:\n\nOPTION A: Stand up and say aloud: 'I need to confess something.' Then... confess something harmless but incriminating — a small mistake, a lie, something that costs time and deflects suspicion from the real act.\n\nOPTION B: Start crying or pretend to. Emotional breakdown. Nobody can question a crying person without feeling bad.\n\nOPTION C: Immediately redirect to another person — as directly as possible. 'I saw something I didn't want to say. [Person X] was not where they claim to have been.'\n\nChoose now. You have 60 seconds."
+            },
+            "private": True,
+            "time_limit_seconds": 60,
+            "game_effect": "panic_moment_triggered"
+        },
+
+        # ── VERBINDUNGS-AUFGABEN (Rollen die zusammen spielen müssen) ───────
+
+        "task_lover_signal": {
+            "trigger_phase": 2, "trigger_condition": "viktor_under_pressure",
+            "assigned_to": "viktor_secret_lover",
+            "instruction": {
+                "de": "💌 DEIN PARTNER BRAUCHT DICH: Viktor steht kurz vor dem Verdacht. Wenn du ihn deckst: Ihr beide riskiert dass eure Affäre ans Licht kommt. Wenn du schweigst: Er könnte als Mörder verurteilt werden. Die App wartet auf deine Entscheidung.",
+                "en": "💌 YOUR PARTNER NEEDS YOU: Viktor is about to be suspected. If you cover for him: you both risk your affair coming to light. If you stay silent: he could be convicted as murderer. The app awaits your decision."
+            },
+            "choice": {
+                "confirm": {"de": "Ich bestätige Viktors Alibi", "en": "I confirm Viktor's alibi"},
+                "deny":    {"de": "Ich schweige", "en": "I stay silent"}
+            },
+            "game_effect": "alibi_decision"
+        },
+
+        "task_butler_niece_confrontation": {
+            "trigger_phase": 2, "trigger_condition": "both_suspects_high_suspicion",
+            "assigned_to": "butler",
+            "instruction": {
+                "de": "🔍 DER BUTLER WEISS ES: Du hast Constanze in der Bibliothek gesehen. Jetzt ist der Moment — konfrontiere sie direkt aber leise. Geh zu ihr und flüstere: 'Ich habe dich gesehen. Wir müssen reden.' Dann entscheidest du ob du es der Gruppe sagst oder nicht.",
+                "en": "🔍 THE BUTLER KNOWS: You saw Constanze in the library. Now is the moment — confront her directly but quietly. Go to her and whisper: 'I saw you. We need to talk.' Then you decide whether to tell the group or not."
+            },
+            "game_effect": "butler_niece_confrontation"
+        },
+
+        "task_ghost_whisper": {
+            "trigger_phase": 2, "trigger_condition": "baron_dies",
+            "assigned_to": "baron",
+            "instruction": {
+                "de": "👻 DU BIST JETZT EIN GEIST: Steh auf und setz dich an den Rand. Du spielst weiter — aber nur durch Flüstern. Wähle in den nächsten 10 Minuten drei Personen und flüstere jedem einen anderen Hinweis. Du weißt wer der Mörder ist. Führe die anderen ohne den Namen zu nennen.",
+                "en": "👻 YOU ARE NOW A GHOST: Stand up and sit at the edge. You continue playing — but only through whispering. In the next 10 minutes choose three people and whisper each a different clue. You know who the murderer is. Guide the others without naming them."
+            },
+            "game_effect": "ghost_mode_active"
+        },
+
+        # ── ZUFALLS-MOMENTE ──────────────────────────────────────────────────
+
+        "random_phone_buzz": {
+            "trigger_phase": 2, "trigger_condition": "random_any_time",
+            "assigned_to": "random",
+            "instruction": {
+                "de": "📱 DEIN TELEFON VIBRIERT: Schau heimlich auf dein Telefon. Die App hat dir soeben eine geheime Nachricht geschickt. Lies sie nur für dich. Reagiere dann auf eine Art die die anderen verwirrt — lächle kurz, oder runzle die Stirn, oder flüstere einer Person etwas.",
+                "en": "📱 YOUR PHONE VIBRATES: Look at your phone secretly. The app just sent you a secret message. Read it only for yourself. Then react in a way that confuses the others — smile briefly, or frown, or whisper something to one person."
+            },
+            "secret_content_options": [
+                {"de": "Der Baron hat dir vor seinem Tod etwas Wichtiges hinterlassen. Du findest es wenn du heute Nacht allein bist.", "en": "The Baron left you something important before his death. You'll find it when you're alone tonight."},
+                {"de": "Jemand hat dich beobachtet. Du weißt nicht wer. Aber du wirst es herausfinden.", "en": "Someone has been watching you. You don't know who. But you will find out."},
+                {"de": "Der Mörder hat heute Nachmittag einen Fehler gemacht. Du weißt es — aber du kannst es nicht beweisen. Noch nicht.", "en": "The murderer made a mistake this afternoon. You know it — but you can't prove it. Not yet."}
+            ],
+            "game_effect": "random_confusion_moment"
+        },
+
+        "random_knocking": {
+            "trigger_phase": 2, "trigger_condition": "random_post_murder_20min",
+            "assigned_to": "all",
+            "broadcast": True,
+            "instruction": {
+                "de": "🚪 KLOPFEN AN DER TÜR: Die App kündigt an — es klopft dreimal. Alle halten inne. Der Host sagt: 'Wer ist da?' Niemand antwortet. Nach 10 Sekunden schweigen: Das Spiel geht weiter. Wer hat dabei am nervösesten reagiert?",
+                "en": "🚪 KNOCK AT THE DOOR: The app announces — three knocks. Everyone stops. The host says: 'Who is there?' Nobody answers. After 10 seconds of silence: the game continues. Who reacted most nervously?"
+            },
+            "game_effect": "door_knock_reactions"
+        },
+
+        "random_light_flicker": {
+            "trigger_phase": 2, "trigger_condition": "atmosphere_trigger",
+            "assigned_to": "all",
+            "broadcast": True,
+            "instruction": {
+                "de": "🕯️ DAS LICHT FLACKERT: Der Host macht kurz das Licht aus (2-3 Sekunden) und wieder an. In dieser Zeit: Wer bewegt sich? Wer greift nach etwas? Wer steht auf? Das Licht kommt wieder an — jeder sagt was er gesehen hat.",
+                "en": "🕯️ THE LIGHT FLICKERS: The host briefly turns off the light (2-3 seconds) and back on. In this time: who moves? Who reaches for something? Who stands up? The light comes back — everyone says what they saw."
+            },
+            "game_effect": "darkness_reactions"
         }
     },
 
     # ─────────────────────────────────────────────────────────────────────────
-    # SPIELPHASEN
+    # VERBINDUNGEN ZWISCHEN ROLLEN
     # ─────────────────────────────────────────────────────────────────────────
-    "phases": {
-        0: {
-            "name": {"de": "Ankunft & Vorstellung", "en": "Arrival & Introduction"},
-            "duration_hint": {"de": "20–30 Minuten", "en": "20–30 minutes"},
-            "description": {
-                "de": "Jeder stellt seinen Charakter vor. Lest eure Intro-Texte laut vor. Danach: 10 Minuten freies Gespräch — bleibt in der Rolle. In dieser Phase passiert schon etwas: Der Mörder erhält um Minute 10 seine geheime Nachricht.",
-                "en": "Everyone introduces their character. Read your intro texts aloud. Then: 10 minutes of free conversation — stay in character. In this phase something already happens: the murderer receives their secret message at minute 10."
-            },
-            "murderer_message": {
-                "de": "⚠️ DU BIST DER MÖRDER. Du hast den Baron getötet. Dein Motiv steht in deiner Rollenakte. Deine Methode: {method}. Du weißt das seit Stunden — du musstest heute Abend nur noch warten. Verhalte dich normal. Du hast die Nacht überlebt. Jetzt musst du auch das Spiel überleben.",
-                "en": "⚠️ YOU ARE THE MURDERER. You killed the Baron. Your motive is in your role file. Your method: {method}. You've known this for hours — you only had to wait until tonight. Behave normally. You survived the night. Now you must survive the game."
-            },
-            "host_note": {
-                "de": "Wenn alle vorgestellt sind: Sag 'Der Baron bittet zu Tisch.' Startet das Dinner. Echtes Essen/Trinken ist jetzt Teil des Spiels.",
-                "en": "When all have been introduced: say 'The Baron invites you to table.' The dinner begins. Real eating/drinking is now part of the game."
-            }
+    "role_connections": {
+        "butler_niece": {
+            "roles": ["butler", "niece"],
+            "connection": "Der Butler hat Constanze in der Bibliothek gesehen. Constanze weiß dass der Butler sie gesehen hat. Beide wissen voneinander — aber keiner hat es bisher gesagt.",
+            "tension": "high"
         },
-        1: {
-            "name": {"de": "Das Dinner", "en": "The Dinner"},
-            "duration_hint": {"de": "20–30 Minuten", "en": "20–30 minutes"},
-            "description": {
-                "de": "Freies Rollenspiel am Tisch. Der Host spielt den Baron (oder eine NPC-Rolle). Aufgaben beginnen zu erscheinen. Geheimnisse werden angedeutet. Noch ist niemand tot.",
-                "en": "Free roleplay at the table. The host plays the Baron (or an NPC role). Tasks begin to appear. Secrets are hinted at. Nobody is dead yet."
-            },
-            "host_note": {
-                "de": "Als Baron: Sage beim Dinner zu jeder Person etwas Bedeutungsvolles. Sag dem Arzt: 'Danke für alles, Heinrich. Ich hoffe wir sehen uns bald — unter besseren Umständen.' Sag dem Butler: 'Edmund. Wir müssen reden. Später.' Sag der Nichte: 'Constanze. Du weißt dass ich dich liebe.' Dann: Verlasse unauffällig den Raum. 3 Minuten später: Schrei (oder lass schreien). Der Baron wurde gefunden.",
-                "en": "As Baron: say something meaningful to each person at dinner. Tell the doctor: 'Thank you for everything, Heinrich. I hope we see each other soon — under better circumstances.' Tell the butler: 'Edmund. We need to talk. Later.' Tell the niece: 'Constanze. You know I love you.' Then: Leave the room inconspicuously. 3 minutes later: scream (or have someone scream). The Baron has been found."
-            }
+        "doctor_baron": {
+            "roles": ["doctor", "baron"],
+            "connection": "Der Arzt hat den Baron fast geblendet. Der Baron hatte vergeben — aber heute Abend die Klage eingereicht. Der Arzt weiß es. Der Baron weiß dass der Arzt es weiß.",
+            "tension": "extreme"
         },
-        2: {
-            "name": {"de": "Der Mord", "en": "The Murder"},
-            "duration_hint": {"de": "5–10 Minuten", "en": "5–10 minutes"},
-            "description": {
-                "de": "Der Schrei. Jemand hat den Baron gefunden. In der Bibliothek. Tot. Ab jetzt ist niemand mehr ein Gast — alle sind Verdächtige.",
-                "en": "The scream. Someone found the Baron. In the library. Dead. From this moment nobody is a guest — everyone is a suspect."
-            },
-            "announcement": {
-                "de": "🔔 DER BARON WURDE GEFUNDEN. Todeszeit: Kurz vor Mitternacht. Ort: Die Bibliothek. Niemand verlässt das Haus. Die Ermittlung beginnt.",
-                "en": "🔔 THE BARON HAS BEEN FOUND. Time of death: just before midnight. Location: the library. Nobody leaves the house. The investigation begins."
-            },
-            "immediate_tasks": ["task_stand_window", "task_glass"],
-            "witness_trigger": True
+        "viktor_random": {
+            "roles": ["lover", "random"],
+            "connection": "Viktor hat eine geheime Affäre mit einer zufälligen anderen Person am Tisch. Beide wissen es. Niemand sonst.",
+            "tension": "secret"
         },
-        3: {
-            "name": {"de": "Die Ermittlung", "en": "The Investigation"},
-            "duration_hint": {"de": "40–50 Minuten", "en": "40–50 minutes"},
-            "description": {
-                "de": "Hinweise werden gefunden. Rollen interagieren. Geheimnisse kommen ans Licht. Vier Runden: Jede Runde wird durch ein Ereignis ausgelöst das die App ankündigt.",
-                "en": "Clues are found. Roles interact. Secrets come to light. Four rounds: each round triggered by an event the app announces."
-            },
-            "rounds": {
-                "A": {
-                    "name": {"de": "Runde A: Erste Verdächtigungen", "en": "Round A: First Suspicions"},
-                    "trigger": "phase_3_start",
-                    "events": ["doctor_examines", "butler_questioned", "witness_speaks"],
-                    "app_message": {
-                        "de": "🔍 ERMITTLUNG BEGINNT. Jeder hat jetzt 10 Minuten um Hinweise zu suchen, Fragen zu stellen und Verdächtigungen auszusprechen. In dieser Zeit werden die ersten Hinweise enthüllt.",
-                        "en": "🔍 INVESTIGATION BEGINS. Everyone now has 10 minutes to search for clues, ask questions and voice suspicions. In this time the first clues will be revealed."
-                    }
-                },
-                "B": {
-                    "name": {"de": "Runde B: Das Geheimnis der Küche", "en": "Round B: The Kitchen Secret"},
-                    "trigger": "after_round_A",
-                    "events": ["cook_pressured", "payment_found", "stranger_observes"],
-                    "app_message": {
-                        "de": "🍴 NEUE INFORMATION: In der Küche wurde etwas gefunden. Die Köchin wird befragt.",
-                        "en": "🍴 NEW INFORMATION: Something was found in the kitchen. The cook is being questioned."
-                    }
-                },
-                "C": {
-                    "name": {"de": "Runde C: Das Testament", "en": "Round C: The Will"},
-                    "trigger": "after_round_B",
-                    "events": ["will_location_hinted", "cellar_key_used", "shadow_acts"],
-                    "app_message": {
-                        "de": "📜 DER ANWALT WARTET. Jemand hat einen Anwalt dabei. Das Testament — welches gilt? Das alte oder das neue?",
-                        "en": "📜 THE LAWYER WAITS. Someone brought a lawyer. The will — which counts? The old or the new?"
-                    }
-                },
-                "D": {
-                    "name": {"de": "Runde D: Alles kommt ans Licht", "en": "Round D: Everything Comes to Light"},
-                    "trigger": "after_round_C",
-                    "events": ["medium_reveals", "detective_interrogates", "affair_revealed"],
-                    "app_message": {
-                        "de": "⚡ LETZTE CHANCE. Alle Karten liegen bald auf dem Tisch. Wer schweigt verliert seine Chance.",
-                        "en": "⚡ LAST CHANCE. All cards will soon be on the table. Whoever remains silent loses their chance."
-                    }
-                }
-            }
+        "stranger_murderer": {
+            "roles": ["stranger", "murderer"],
+            "connection": "Der Fremde beschattet den Mörder — weiß es aber nicht. Er hat eine Akte mit Geheimnissen die nahe am Tatmotiv liegen.",
+            "tension": "dramatic_irony"
         },
-        4: {
-            "name": {"de": "Die Abrechnung", "en": "The Reckoning"},
-            "duration_hint": {"de": "10–15 Minuten", "en": "10–15 minutes"},
-            "description": {
-                "de": "Letzte Anschuldigungen. Jeder hat 60 Sekunden um seine Theorie zu präsentieren. Dann: Die Abstimmung. Dann: Die Enthüllung.",
-                "en": "Final accusations. Everyone has 60 seconds to present their theory. Then: the vote. Then: the revelation."
-            },
-            "accusation_order": "clockwise",
-            "vote_mechanic": {
-                "de": "Jeder wählt einen Namen in der App. Mehrheit entscheidet. Bei Gleichstand: Der Inspektor hat die Stichstimme.",
-                "en": "Everyone votes a name in the app. Majority decides. In case of tie: the inspector has the casting vote."
-            }
+        "cook_murderer": {
+            "roles": ["cook", "murderer"],
+            "connection": "Der Mörder hat die Köchin beauftragt etwas in das Essen des Barons zu geben. Die Köchin kennt den Namen des Auftraggebers — aber schweigt.",
+            "tension": "critical"
         }
     },
 
     # ─────────────────────────────────────────────────────────────────────────
-    # ENDE-SZENARIEN
-    # ─────────────────────────────────────────────────────────────────────────
-    "endings": {
-        "murderer_caught": {
-            "condition": "majority_votes_murderer_correctly",
-            "title": {"de": "Gerechtigkeit", "en": "Justice"},
-            "text": {
-                "de": "Der Mörder wurde gefasst. {murderer_name} gestand — oder wurde durch Beweise überführt. Das Herrenhaus Dunkelbach wird nie wieder dasselbe sein. Aber Gerechtigkeit hat gesiegt.\n\nWer gewann:\n• Alle Überlebenden die für den richtigen Mörder stimmten\n• Der Inspektor (falls er als erster anklagte)\n• Die Zeugin (falls ihre Vision sich bewahrheitete)",
-                "en": "The murderer was caught. {murderer_name} confessed — or was convicted by evidence. Dunkelbach Manor will never be the same. But justice prevailed.\n\nWho won:\n• All survivors who voted for the right murderer\n• The inspector (if they accused first)\n• The witness (if their vision proved true)"
-            }
-        },
-        "murderer_escapes": {
-            "condition": "majority_votes_wrong_person",
-            "title": {"de": "Der Mörder entkommt", "en": "The Murderer Escapes"},
-            "text": {
-                "de": "Ein Unschuldiger wurde verurteilt. Der wahre Mörder sitzt unter euch — und lacht. {murderer_name} hat gewonnen. Das Herrenhaus Dunkelbach hat sein erstes Opfer gefunden.\n\nDer Mörder offenbart sich jetzt selbst.",
-                "en": "An innocent was convicted. The real murderer sits among you — and laughs. {murderer_name} has won. Dunkelbach Manor has claimed its first victim.\n\nThe murderer now reveals themselves."
-            }
-        },
-        "shadow_wins": {
-            "condition": "shadow_steals_will_undiscovered",
-            "title": {"de": "Der Dieb im Dunkeln", "en": "The Thief in the Dark"},
-            "text": {
-                "de": "Während alle sich gegenseitig beschuldigten — verschwand das Testament. Die Schattenfigur hat gewonnen. Wer erbt jetzt was? Niemand weiß es. Das Spiel geht weiter — ohne Testament.\n\nDie Ermittlung muss ohne dieses Dokument abgeschlossen werden.",
-                "en": "While everyone accused each other — the will disappeared. The Shadow figure has won. Who inherits what now? Nobody knows. The game continues — without a will.\n\nThe investigation must be concluded without this document."
-            }
-        },
-        "perfect_solve": {
-            "condition": "witness_and_doctor_both_correct",
-            "title": {"de": "Die Vollendete Lösung", "en": "The Perfect Solve"},
-            "text": {
-                "de": "Die Zeugin sah die Wahrheit. Der Arzt bestätigte sie. Gemeinsam haben sie das Unmögliche getan — den Mörder mit lückenlosem Beweis überführt. Das ist selten. Das ist brillant.",
-                "en": "The witness saw the truth. The doctor confirmed it. Together they did the impossible — convicted the murderer with complete evidence. This is rare. This is brilliant."
-            }
-        },
-        "two_murderers": {
-            "condition": "random_chance_8_plus_players",
-            "title": {"de": "Zwei Mörder", "en": "Two Murderers"},
-            "description": {
-                "de": "Bei 8+ Spielern: 20% Chance dass zwei Personen unabhängig voneinander den Baron töten wollten. Nur einer war schneller. Der zweite weiß das — und muss verhindern dass der erste entdeckt wird, da sonst auch sein Plan auffliegt.",
-                "en": "With 8+ players: 20% chance that two people independently wanted to kill the Baron. Only one was faster. The second knows this — and must prevent the first from being discovered, as their own plan would also be revealed."
-            }
-        }
-    },
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # EREIGNIS-KETTEN (Event Chains)
+    # ORGANISCHE EREIGNISKETTEN
     # ─────────────────────────────────────────────────────────────────────────
     "event_chains": [
         {
-            "id": "chain_suspicion_pair",
-            "trigger": "two_players_talk_privately_3min",
+            "id": "chain_two_talking",
+            "trigger": "two_players_private_3min",
             "message_to_third": {
-                "de": "👁️ Du hast bemerkt: {player_a} und {player_b} flüstern seit Minuten. Das ist verdächtig. Du kannst alle aufrufen und es ansprechen — oder sie weiter beobachten.",
-                "en": "👁️ You noticed: {player_a} and {player_b} have been whispering for minutes. This is suspicious. You can call everyone's attention to it — or keep observing."
-            },
-            "assigned_to": "random_suspicious_role"
+                "de": "👁️ Du hast bemerkt: {player_a} und {player_b} flüstern seit Minuten. Du kannst alle darauf aufmerksam machen — oder sie weiter beobachten.",
+                "en": "👁️ You noticed: {player_a} and {player_b} have been whispering for minutes. You can alert everyone — or keep observing."
+            }
         },
         {
             "id": "chain_wine_drinker",
-            "trigger": "player_drinks_third_time",
+            "trigger": "someone_drinks_more_than_others",
             "message_to_observer": {
-                "de": "🍷 {player} trinkt ungewöhnlich viel — und gerade jetzt, wo sie/er etwas Wichtiges erzählt. Wein löst Zungen — aber auch Gewissen. Rede mit ihr/ihm.",
-                "en": "🍷 {player} is drinking unusually much — and right now while saying something important. Wine loosens tongues — and consciences. Talk to them."
-            },
-            "assigned_to": "person_who_was_told_to_watch_drinker"
-        },
-        {
-            "id": "chain_confrontation",
-            "trigger": "suspicion_meter_high",
-            "message_to_suspicious": {
-                "de": "⚠️ WARNUNG: Du wirst verdächtigt. Mindestens zwei Personen am Tisch sprechen gerade über dich. Du kannst jetzt proaktiv handeln — bevor sie anklagen.",
-                "en": "⚠️ WARNING: You are being suspected. At least two people at the table are talking about you right now. You can act proactively — before they accuse."
+                "de": "🍷 {player} trinkt ungewöhnlich viel — und redet dabei besonders viel. Wein löst Zungen und Gewissen. Rede mit ihr/ihm.",
+                "en": "🍷 {player} is drinking unusually much — and talking particularly much while doing so. Wine loosens tongues and consciences. Talk to them."
             }
         },
         {
-            "id": "chain_lover_revelation",
-            "trigger": "viktor_under_pressure",
-            "message_to_lover": {
-                "de": "💌 Viktor braucht dich. Er steht kurz davor verdächtigt zu werden. Wenn du jetzt nichts tust — fällt er. Und mit ihm du. Die App wartet auf deine Entscheidung: Deckst du ihn?",
-                "en": "💌 Viktor needs you. He's about to be accused. If you do nothing — he falls. And with him, you. The app awaits your decision: do you cover for him?"
-            },
-            "assigned_to": "viktor_secret_lover",
-            "choice": {
-                "confirm_alibi": {
-                    "de": "Ja, ich bestätige das Alibi",
-                    "en": "Yes, I confirm the alibi"
-                },
-                "deny_alibi": {
-                    "de": "Nein, ich sage nichts",
-                    "en": "No, I say nothing"
-                }
+            "id": "chain_refuse_drink",
+            "trigger": "player_refuses_group_drink",
+            "message_to_all": {
+                "de": "👀 Hat das jemand gesehen? {player} hat beim gemeinsamen Trinken nicht mitgemacht.",
+                "en": "👀 Did anyone see that? {player} didn't join in the group drink."
             }
         },
         {
-            "id": "chain_medium_timing",
-            "trigger": "medium_observes_30min",
-            "message_to_medium": {
-                "de": "🕯️ Jetzt ist dein Moment. Der Raum ist ruhig genug. Deine Botschaft wird Eindruck machen. Nutze deine Fähigkeit — aber wähle den Moment weise.",
-                "en": "🕯️ Now is your moment. The room is quiet enough. Your message will make an impression. Use your ability — but choose the moment wisely."
+            "id": "chain_early_accusation",
+            "trigger": "someone_accuses_directly",
+            "message_to_murderer": {
+                "de": "⚠️ {player} verdächtigt dich öffentlich. Handle jetzt — du hast 2 Minuten bevor der Druck zu groß wird.",
+                "en": "⚠️ {player} is publicly suspecting you. Act now — you have 2 minutes before the pressure becomes too great."
             }
         },
         {
-            "id": "chain_shadow_discovered",
-            "trigger": "shadow_acts",
-            "message_to_random": {
-                "de": "🌑 Du hast gerade bemerkt: Eine Person am Tisch schaut auffällig oft zur Tür — als würde sie auf eine Möglichkeit warten. Warum?",
-                "en": "🌑 You just noticed: one person at the table is looking conspicuously often toward the door — as if waiting for an opportunity. Why?"
+            "id": "chain_ghost_appears",
+            "trigger": "baron_death_announced",
+            "message_to_baron": {
+                "de": "👻 Du bist jetzt tot. Steh auf. Setz dich an den Rand. Warte — dann beginne zu flüstern. Du weißt wer der Mörder ist. Führe die anderen.",
+                "en": "👻 You are now dead. Stand up. Sit at the edge. Wait — then begin to whisper. You know who the murderer is. Guide the others."
             }
         }
     ],
 
     # ─────────────────────────────────────────────────────────────────────────
-    # ATMOSPHÄREN-NACHRICHTEN (broadcast to all at key moments)
+    # ATMOSPHÄREN-NACHRICHTEN (organisch, kein fester Zeitplan)
     # ─────────────────────────────────────────────────────────────────────────
     "atmosphere_messages": [
-        {
-            "trigger_time_min": 5,
-            "phase": 1,
-            "text": {"de": "🌧️ Draußen beginnt es zu regnen. Der Regen trommelt gegen die Fenster des Herrenhauses. Niemand kann jetzt gehen.", "en": "🌧️ Outside it begins to rain. Rain drums against the manor windows. Nobody can leave now."}
-        },
-        {
-            "trigger_time_min": 15,
-            "phase": 1,
-            "text": {"de": "🕙 Die Uhr schlägt 22 Uhr. Der Baron klopft mit seinem Glas auf den Tisch: 'Ich habe eine Ankündigung zu machen. Aber zuerst — trinken wir.'", "en": "🕙 The clock strikes 10pm. The Baron taps his glass: 'I have an announcement to make. But first — let us drink.'"}
-        },
-        {
-            "trigger": "phase_2_start",
-            "text": {"de": "💀 DER SCHREI. Aus der Bibliothek. Jemand hat etwas gefunden. Der Baron von Dunkelbach ist tot.", "en": "💀 THE SCREAM. From the library. Someone found something. Baron von Dunkelbach is dead."}
-        },
-        {
-            "trigger": "round_B_start",
-            "text": {"de": "🍴 Ein Geruch aus der Küche. Süßlich. Fast medizinisch. Was war das?", "en": "🍴 A smell from the kitchen. Sweet. Almost medicinal. What was that?"}
-        },
-        {
-            "trigger": "round_C_start",
-            "text": {"de": "📜 Ein Anwalt wartet draußen. Jemand hat ihn mitgebracht. Warum jetzt?", "en": "📜 A lawyer waits outside. Someone brought him. Why now?"}
-        },
-        {
-            "trigger": "10min_before_reckoning",
-            "text": {"de": "⚡ Die Stunde der Wahrheit naht. Wer schweigt verliert. Wer lügt wird entlarvt. Wer die Wahrheit sagt — überlebt vielleicht.", "en": "⚡ The hour of truth approaches. Those who remain silent lose. Those who lie will be exposed. Those who tell the truth — may survive."}
-        }
+        {"trigger": "game_start_5min",     "text": {"de": "🌧️ Draußen beginnt es zu regnen. Niemand kann jetzt gehen.", "en": "🌧️ Outside it begins to rain. Nobody can leave now."}},
+        {"trigger": "game_start_15min",    "text": {"de": "🕙 Die Uhr schlägt 22 Uhr. Der Baron klopft mit seinem Glas: 'Ich habe eine Ankündigung.'", "en": "🕙 The clock strikes 10pm. The Baron taps his glass: 'I have an announcement.'"}},
+        {"trigger": "murder_announced",    "text": {"de": "💀 DER SCHREI. Aus der Bibliothek. Baron Aldric von Dunkelbach ist tot.", "en": "💀 THE SCREAM. From the library. Baron Aldric von Dunkelbach is dead."}},
+        {"trigger": "investigation_10min","text": {"de": "🍴 Ein Geruch aus der Küche. Süßlich. Fast medizinisch.", "en": "🍴 A smell from the kitchen. Sweet. Almost medicinal."}},
+        {"trigger": "investigation_20min","text": {"de": "📜 Ein Anwalt wartet draußen. Jemand hat ihn mitgebracht. Warum jetzt?", "en": "📜 A lawyer waits outside. Someone brought him. Why now?"}},
+        {"trigger": "tension_high",        "text": {"de": "⚡ Die Wahrheit ist nahe. Wer schweigt verliert. Wer lügt wird entlarvt.", "en": "⚡ The truth is close. Those who stay silent lose. Those who lie will be exposed."}}
     ],
 
     # ─────────────────────────────────────────────────────────────────────────
-    # HOST-OBJEKTE (Dinge die der Host vorbereiten muss)
+    # SPIELENDE (ohne erzwungene Abstimmung)
     # ─────────────────────────────────────────────────────────────────────────
-    "host_objects": [
-        {
-            "object": "hidden_note",
-            "instruction": {"de": "Falte einen Zettel mit folgendem Text und verstecke ihn im Badezimmer (hinter dem Spiegel oder unter dem Waschbecken): 'Der Baron sagte mir: Wer auch immer nach meinem Tod ZUERST nach meiner Bibliothek fragt — der hat etwas zu verbergen.'", "en": "Fold a note with the following text and hide it in the bathroom (behind the mirror or under the sink): 'The Baron told me: whoever is FIRST to ask about my library after my death — has something to hide.'"}
+    "endings": {
+        "murderer_caught": {
+            "condition": "majority_accuses_murderer_correctly",
+            "title": {"de": "Gerechtigkeit", "en": "Justice"},
+            "text": {"de": "Der Mörder wurde überführt. Nicht durch eine Abstimmung — sondern durch Beweise, Beobachtung, und die Wahrheit die immer ans Licht kommt.\n\nGewonnen: Alle die für den richtigen Mörder sprachen.", "en": "The murderer was convicted. Not through a vote — but through evidence, observation, and the truth that always comes to light.\n\nWon: Everyone who spoke for the right murderer."}
         },
-        {
-            "object": "barons_glass",
-            "instruction": {"de": "Stelle ein besonderes Weinglas bereit — das 'Glas des Barons'. Es muss sich optisch von den anderen unterscheiden. Wenn der Baron stirbt: Stelle es auf den Boden neben dem Stuhl.", "en": "Prepare a special wine glass — the 'Baron's glass'. It must look different from the others. When the Baron dies: place it on the floor beside the chair."}
+        "murderer_escapes": {
+            "condition": "wrong_person_convicted",
+            "title": {"de": "Der Mörder lacht", "en": "The Murderer Laughs"},
+            "text": {"de": "Ein Unschuldiger wurde beschuldigt. Der wahre Mörder sitzt unter euch und lacht. {murderer_name} hat gewonnen.", "en": "An innocent was accused. The real murderer sits among you and laughs. {murderer_name} has won."}
         },
-        {
-            "object": "sealed_envelope",
-            "instruction": {"de": "Gib der Spielerin die die Nichte spielt einen echten versiegelten Brief. Inhalt: 'Liebe Constanze, wenn du dies liest bin ich tot. Die Wahrheit über deine Mutter liegt in der Bibliothek — drittes Regal, hinter Schiller. Verbrenne es nicht. — Aldric'", "en": "Give the player playing the niece a real sealed envelope. Contents: 'Dear Constanze, if you read this I am dead. The truth about your mother is in the library — third shelf, behind Schiller. Do not burn it. — Aldric'"}
+        "shadow_wins": {
+            "condition": "shadow_steals_will",
+            "title": {"de": "Das Testament ist weg", "en": "The Will is Gone"},
+            "text": {"de": "Während alle ermittelten — verschwand das Testament. Die Schattenfigur hat gewonnen. Wer erbt was? Niemand weiß es.", "en": "While everyone investigated — the will disappeared. The Shadow figure has won. Who inherits what? Nobody knows."}
         },
-        {
-            "object": "schiller_clue",
-            "instruction": {"de": "Stelle ein Buch von Schiller sichtbar irgendwo auf. Verstecke darin ein Foto (jedes alte Foto reicht) mit der Notiz auf der Rückseite: 'Blut ist dicker als Versprechen. — A.'", "en": "Place a book by Schiller somewhere visible. Hide inside it a photo (any old photo works) with a note on the back: 'Blood is thicker than promises. — A.'"}
+        "perfect_solve": {
+            "condition": "witness_and_doctor_both_correct",
+            "title": {"de": "Vollendete Lösung", "en": "Perfect Solve"},
+            "text": {"de": "Die Schriftstellerin und der Arzt haben gemeinsam das Unmögliche geschafft. Das ist selten. Das ist brillant.", "en": "The writer and the doctor together accomplished the impossible. This is rare. This is brilliant."}
         }
-    ]
+    },
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # HINWEISE
+    # ─────────────────────────────────────────────────────────────────────────
+    "clues": {
+        "key_cellar": {
+            "name": {"de": "Schlüssel W-7", "en": "Key W-7"},
+            "text": {"de": "Ein alter Messingsschlüssel. Auf der Rückseite: 'W-7'. Der Weinkeller. Warum hätte jemand diesen Schlüssel heute Nacht gebraucht?", "en": "An old brass key. On the back: 'W-7'. The wine cellar. Why would someone have needed this key tonight?"}
+        },
+        "household_ledger": {
+            "name": {"de": "Das Haushaltsbuch", "en": "The Household Ledger"},
+            "text": {"de": "Seite 47: Korrekturen mit anderer Tinte. 8.400 Mark fehlen über drei Jahre.", "en": "Page 47: corrections in different ink. 8,400 marks missing over three years."}
+        },
+        "sealed_letter": {
+            "name": {"de": "Der versiegelte Brief", "en": "The Sealed Letter"},
+            "text": {"de": "Inhalt wenn geöffnet: 'Constanze — Die Wahrheit über deine Mutter liegt hinter Schiller. — Aldric'", "en": "Contents when opened: 'Constanze — The truth about your mother is behind Schiller. — Aldric'"}
+        },
+        "cause_of_death": {
+            "name": {"de": "Todesursache", "en": "Cause of Death"},
+            "text": {"de": "Herzversagen — aber erweiterte Pupillen. Nicht typisch für natürlichen Tod. Digitalis-Überdosis.", "en": "Heart failure — but dilated pupils. Not typical for natural death. Digitalis overdose."}
+        },
+        "kitchen_substance": {
+            "name": {"de": "Das Päckchen aus der Küche", "en": "The Kitchen Package"},
+            "text": {"de": "Weißes Pulver. Geruchlos. Die Köchin sagt: 'Herzstärkendes.' Der Arzt weiß: Das ist Digitalis.", "en": "White powder. Odourless. The cook says: 'Heart tonic.' The doctor knows: this is digitalis."}
+        },
+        "payment_receipt": {
+            "name": {"de": "Quittung: 200 Mark", "en": "Receipt: 200 Marks"},
+            "text": {"de": "Kein Name. Datum: Heute. Gasthausschrift aus München.", "en": "No name. Date: today. Inn handwriting from Munich."}
+        },
+        "medical_bag": {
+            "name": {"de": "Die Arzttasche", "en": "The Doctor's Bag"},
+            "text": {"de": "Eine Spritze fehlt. Die Digitalis-Schachtel ist offen — zwei Tabletten fehlen.", "en": "One syringe missing. The digitalis box is open — two tablets missing."}
+        },
+        "barons_evidence": {
+            "name": {"de": "Die Beweise des Barons", "en": "The Baron's Evidence"},
+            "text": {"de": "In der Bibliothek unter der dritten Bodendiele: Ein Umschlag. Darin Dokumente die auf den Mörder zeigen.", "en": "In the library under the third floorboard: an envelope. Inside documents pointing to the murderer."}
+        },
+        "new_will_location": {
+            "name": {"de": "Das neue Testament", "en": "The New Will"},
+            "text": {"de": "Hinter den Rechtsbüchern im dritten Regal. Noch nicht unterschrieben.", "en": "Behind the law books on the third shelf. Not yet signed."}
+        },
+        "surveillance_file": {
+            "name": {"de": "Die Observationsakte", "en": "The Surveillance File"},
+            "text": {"de": "12 Seiten über eine Person am Tisch. Zeiten, Orte, ein immer wiederkehrender Name.", "en": "12 pages on one person at the table. Times, places, one recurring name."}
+        },
+        "blackmail_files": {
+            "name": {"de": "Die Erpressungsakten", "en": "The Blackmail Files"},
+            "text": {"de": "Drei Dossiers. Drei Personen. Drei Geheimnisse die zusammen auf den Mörder zeigen.", "en": "Three dossiers. Three people. Three secrets that together point to the murderer."}
+        }
+    }
 }
