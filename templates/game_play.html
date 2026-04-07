@@ -1,420 +1,495 @@
 {% extends "base.html" %}
-{% block title %}Spiel läuft – Krimi Dinner{% endblock %}
+{% block title %}Spiel – Krimi Dinner{% endblock %}
 {% block head %}
 <style>
-  .game-layout { display:grid; grid-template-columns:1fr 320px; gap:16px; max-width:1100px; margin:0 auto; }
-  @media(max-width:800px){ .game-layout{grid-template-columns:1fr;} .game-sidebar{order:-1;} }
+  .game-wrap { max-width:700px; margin:0 auto; }
 
-  /* Role Card */
-  .role-card { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:10px; overflow:hidden; margin-bottom:16px; }
-  .role-card-header { padding:20px 24px 12px; border-bottom:1px solid var(--grey-2); }
-  .role-tag { font-size:.62rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--grey-5); margin-bottom:6px; }
-  .role-name { font-family:'DM Serif Display',serif; font-size:1.5rem; color:var(--white); }
-  .role-card-body { padding:20px 24px; }
-  .role-section-title { font-size:.62rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--grey-5); margin:16px 0 6px; }
-  .role-text { font-size:.9rem; color:var(--grey-6); line-height:1.6; }
-  .role-secret { background:rgba(192,57,43,.08); border:1px solid rgba(192,57,43,.2); border-radius:6px; padding:14px; }
-  .role-secret .role-text { color:#e74c3c; }
-  .role-ability { background:var(--grey-2); border-radius:6px; padding:14px; }
-  .murderer-reveal { background:rgba(192,57,43,.12); border:2px solid #c0392b; border-radius:8px; padding:16px; margin-top:16px; display:none; }
-  .murderer-reveal.show { display:block; animation:fadeUp .5s ease; }
-  .murderer-reveal h3 { color:#e74c3c; font-family:'DM Serif Display',serif; margin-bottom:8px; }
+  /* Role card */
+  .role-card { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:10px; margin-bottom:16px; overflow:hidden; }
+  .role-header { padding:20px 24px 14px; border-bottom:1px solid var(--grey-2); }
+  .role-tag  { font-size:.62rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--grey-5); margin-bottom:6px; }
+  .role-name { font-family:'DM Serif Display',serif; font-size:1.6rem; color:var(--white); }
+  .role-body { padding:20px 24px; }
+  .role-section { margin-bottom:18px; }
+  .role-section-label { font-size:.62rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--grey-5); margin-bottom:6px; }
+  .role-text  { font-size:.88rem; color:var(--grey-6); line-height:1.65; }
+  .role-secret-box { background:rgba(192,57,43,.07); border:1px solid rgba(192,57,43,.2); border-radius:6px; padding:14px; }
+  .role-secret-box .role-text { color:#e8a0a0; }
+  .role-ability-box { background:var(--grey-2); border-radius:6px; padding:14px; }
+  .murderer-box { background:rgba(192,57,43,.12); border:2px solid #c0392b; border-radius:8px; padding:16px; margin-top:14px; display:none; }
+  .murderer-box.show { display:block; animation:fadeUp .5s ease; }
+  .murderer-box h4 { color:#e74c3c; margin-bottom:8px; font-family:'DM Serif Display',serif; }
 
-  /* Phase indicator */
-  .phase-bar { display:flex; gap:4px; margin-bottom:20px; }
-  .phase-dot { flex:1; height:4px; border-radius:2px; background:var(--grey-3); transition:background .3s; }
-  .phase-dot.done { background:var(--white); }
-  .phase-dot.active { background:#27ae60; }
-  .phase-name { font-size:.72rem; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--grey-5); margin-bottom:16px; }
+  /* Ghost mode */
+  .ghost-panel { background:rgba(100,100,200,.1); border:1px solid rgba(100,100,200,.3); border-radius:10px; padding:20px; margin-bottom:16px; }
+  .ghost-title { font-family:'DM Serif Display',serif; color:#aab; font-size:1.2rem; margin-bottom:8px; }
+  .ghost-text  { font-size:.85rem; color:#889; line-height:1.6; margin-bottom:14px; }
+  .ghost-select { width:100%; margin-bottom:10px; }
+  .ghost-input  { width:100%; margin-bottom:10px; }
+
+  /* Tasks feed */
+  .feed { display:flex; flex-direction:column; gap:8px; }
+  .feed-item { padding:14px 16px; border-radius:8px; font-size:.85rem; line-height:1.55; position:relative; }
+  .feed-task      { background:rgba(52,152,219,.1); border:1px solid rgba(52,152,219,.25); color:#7ec8e3; }
+  .feed-task-private { background:rgba(231,76,60,.08); border:1px solid rgba(231,76,60,.2); color:#e8a090; }
+  .feed-atmosphere { background:var(--grey-1); border:1px solid var(--grey-2); color:var(--grey-6); font-style:italic; }
+  .feed-clue      { background:rgba(39,174,96,.1); border:1px solid rgba(39,174,96,.2); color:#7dd8a0; }
+  .feed-ghost     { background:rgba(100,100,200,.1); border:1px solid rgba(100,100,200,.2); color:#aab; }
+  .feed-confession{ background:rgba(241,196,15,.1); border:1px solid rgba(241,196,15,.2); color:#f5d87a; }
+  .feed-announcement{ background:var(--grey-2); color:var(--white); border:1px solid var(--grey-3); }
+  .feed-time { font-size:.65rem; color:var(--grey-4); position:absolute; top:10px; right:14px; }
 
   /* Clues */
-  .clue-item { padding:14px; border:1px solid var(--grey-2); border-radius:8px; margin-bottom:10px; background:var(--grey-1); cursor:pointer; transition:border-color .2s; }
+  .clue-item { padding:12px 16px; border:1px solid var(--grey-2); border-radius:8px; background:var(--grey-1); cursor:pointer; margin-bottom:8px; transition:border-color .2s; }
   .clue-item:hover { border-color:var(--grey-4); }
-  .clue-item.new { border-color:#27ae60; animation:fadeUp .4s ease; }
-  .clue-name { font-size:.82rem; font-weight:500; color:var(--white); margin-bottom:4px; }
-  .clue-text { font-size:.78rem; color:var(--grey-5); line-height:1.5; display:none; }
+  .clue-name { font-size:.85rem; font-weight:500; color:var(--white); margin-bottom:2px; }
+  .clue-text { font-size:.78rem; color:var(--grey-5); line-height:1.5; display:none; margin-top:8px; }
   .clue-item.open .clue-text { display:block; }
-  .clue-count { font-size:.65rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-5); margin-bottom:12px; }
-
-  /* Events/Feed */
-  .event-feed { display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; }
-  .event-item { padding:10px 14px; border-radius:6px; font-size:.8rem; line-height:1.5; }
-  .event-broadcast { background:var(--grey-2); color:var(--grey-6); }
-  .event-private   { background:rgba(39,174,96,.1); border:1px solid rgba(39,174,96,.2); color:#27ae60; }
-  .event-warning   { background:rgba(192,57,43,.1); border:1px solid rgba(192,57,43,.2); color:#e74c3c; }
-  .event-task      { background:rgba(52,152,219,.1); border:1px solid rgba(52,152,219,.2); color:#3498db; }
-  .event-atmosphere{ background:var(--grey-1); border:1px solid var(--grey-2); color:var(--grey-6); font-style:italic; }
 
   /* Actions */
-  .actions-grid { display:flex; flex-wrap:wrap; gap:8px; }
-  .ability-used { opacity:.35; pointer-events:none; text-decoration:line-through; }
+  .actions-wrap { display:flex; flex-wrap:wrap; gap:8px; }
+  .action-used  { opacity:.3; pointer-events:none; text-decoration:line-through; }
 
   /* Players */
-  .player-list-game { display:flex; flex-direction:column; gap:6px; }
-  .player-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--grey-2); border-radius:6px; cursor:pointer; transition:background .2s; }
+  .players-list { display:flex; flex-direction:column; gap:6px; }
+  .player-row   { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--grey-2); border-radius:6px; cursor:pointer; transition:background .15s; }
   .player-row:hover { background:var(--grey-3); }
-  .player-avatar-sm { width:28px; height:28px; border-radius:50%; background:var(--grey-3); display:flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; }
-  .player-name-sm { font-size:.85rem; color:var(--white); flex:1; }
-  .suspect-btn { font-size:.6rem; padding:3px 8px; }
+  .player-av    { width:28px; height:28px; border-radius:50%; background:var(--grey-3); display:flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; }
 
-  /* Voting */
-  .vote-screen { display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:200; align-items:center; justify-content:center; }
-  .vote-screen.show { display:flex; }
-  .vote-box { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:12px; padding:32px; max-width:400px; width:90%; }
-  .vote-title { font-family:'DM Serif Display',serif; font-size:1.4rem; margin-bottom:8px; }
-  .vote-sub { color:var(--grey-5); font-size:.85rem; margin-bottom:24px; }
-  .vote-option { display:block; padding:12px 16px; border:1px solid var(--grey-2); border-radius:6px; margin-bottom:8px; cursor:pointer; text-align:left; background:var(--grey-2); color:var(--white); font-size:.9rem; transition:border-color .2s; width:100%; }
-  .vote-option:hover { border-color:var(--white); }
-  .vote-option.selected { border-color:#27ae60; background:rgba(39,174,96,.1); }
+  /* Vote modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:300; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:12px; padding:28px; max-width:380px; width:90%; }
+  .modal-title { font-family:'DM Serif Display',serif; font-size:1.3rem; margin-bottom:8px; }
+  .modal-sub   { color:var(--grey-5); font-size:.85rem; margin-bottom:20px; }
+  .vote-opt    { display:block; width:100%; padding:12px 16px; border:1px solid var(--grey-2); border-radius:6px; margin-bottom:8px; cursor:pointer; text-align:left; background:var(--grey-2); color:var(--white); font-size:.88rem; transition:border-color .15s; }
+  .vote-opt:hover   { border-color:var(--grey-4); }
+  .vote-opt.selected{ border-color:#27ae60; background:rgba(39,174,96,.1); }
 
-  /* Sidebar */
-  .game-sidebar-section { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:8px; padding:16px; margin-bottom:12px; }
-  .sidebar-title { font-size:.65rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--grey-5); margin-bottom:12px; }
+  /* Diagnosis modal */
+  .diag-input { width:100%; margin-bottom:12px; padding:12px; background:var(--grey-2); border:1px solid var(--grey-3); border-radius:6px; color:var(--white); font-size:.9rem; }
 
-  /* Host controls */
-  .host-panel { background:rgba(192,57,43,.06); border:1px solid rgba(192,57,43,.2); border-radius:8px; padding:16px; margin-bottom:12px; }
-  .host-panel-title { font-size:.65rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#e74c3c; margin-bottom:12px; }
+  /* Host panel */
+  .host-panel { background:rgba(192,57,43,.06); border:1px solid rgba(192,57,43,.15); border-radius:8px; padding:14px 18px; margin-bottom:12px; }
+  .host-label { font-size:.62rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#c0392b; margin-bottom:10px; }
+
+  /* Accordion sections */
+  .section-toggle { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:14px 0; border-bottom:1px solid var(--grey-2); user-select:none; }
+  .section-toggle h3 { font-size:.88rem; font-weight:500; color:var(--white); }
+  .section-toggle .arrow { color:var(--grey-5); transition:transform .2s; }
+  .section-toggle.open .arrow { transform:rotate(180deg); }
+  .section-body { padding:14px 0; display:none; }
+  .section-body.open { display:block; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .new-item { animation:fadeUp .4s ease; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div style="margin-bottom:16px;">
-  <!-- Phase bar -->
-  <div class="phase-bar">
-    {% for i in range(5) %}
-    <div class="phase-dot {% if i < phase %}done{% elif i == phase %}active{% endif %}"></div>
-    {% endfor %}
-  </div>
-  <div class="phase-name" id="phase-name">
-    {% set phase_names = ['Ankunft & Vorstellung','Das Dinner','Der Mord','Die Ermittlung','Die Abrechnung'] %}
-    Phase {{ phase }}: {{ phase_names[phase] if phase < phase_names|length else 'Abrechnung' }}
-  </div>
-</div>
+<div class="game-wrap">
 
-<div class="game-layout">
-  <!-- Main column -->
-  <div>
+  {% if role_card %}
 
-    {% if role_card %}
-    <!-- Role Card -->
-    <div class="role-card fade-up">
-      <div class="role-card-header">
-        <div class="role-tag">Deine Rolle</div>
-        <div class="role-name">{{ role_card.role_name }}</div>
-      </div>
-      <div class="role-card-body">
-        <div class="role-section-title">Charakter</div>
+  <!-- Ghost mode banner (baron after death) -->
+  {% if is_baron and ghost_active %}
+  <div class="ghost-panel fade-up">
+    <div class="ghost-title">👻 Du bist jetzt ein Geist</div>
+    <div class="ghost-text">Du spielst weiter — aber nur durch Flüstern. Wähle eine Person und gib ihr einen Hinweis. Du weißt wer der Mörder ist: <strong>{{ role_card.knows_murderer_role or '?' }}</strong>. Nenne ihn nie direkt.</div>
+    <label style="font-size:.72rem;color:var(--grey-5);margin-bottom:6px;display:block;">Person auswählen:</label>
+    <select class="ghost-select" id="ghost-target" style="background:var(--grey-2);border:1px solid var(--grey-3);color:var(--white);padding:10px;border-radius:6px;">
+      <option value="">– Person wählen –</option>
+    </select>
+    <input class="ghost-input" id="ghost-clue" type="text" placeholder="Dein Hinweis..." style="background:var(--grey-2);border:1px solid var(--grey-3);color:var(--white);padding:10px;border-radius:6px;">
+    <button class="btn btn-sm btn-full" onclick="sendGhostWhisper()">Hinweis flüstern</button>
+  </div>
+  {% endif %}
+
+  <!-- Murderer reveal (shown 10min after start) -->
+  {% if role_card.is_murderer %}
+  <div class="murderer-box" id="murderer-box">
+    <h4>⚠️ Du bist der Mörder</h4>
+    <div style="font-size:.85rem;color:#e8a0a0;line-height:1.6;">{{ role_card.murderer_motive }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Role Card -->
+  <div class="role-card fade-up">
+    <div class="role-header">
+      <div class="role-tag">{% if role_card.is_murderer %}🔪 Mörder{% elif role_card.can_be_ghost %}👑 Baron{% elif role_card.is_wildcard %}🌑 Wildcard{% else %}🎭 Rolle{% endif %}</div>
+      <div class="role-name">{{ role_card.role_name }}</div>
+    </div>
+    <div class="role-body">
+      <div class="role-section">
+        <div class="role-section-label">Einleitung</div>
         <div class="role-text">{{ role_card.intro }}</div>
-
-        <div class="role-section-title">Erscheinungsbild</div>
+      </div>
+      <div class="role-section">
+        <div class="role-section-label">Erscheinungsbild</div>
         <div class="role-text">{{ role_card.appearance }}</div>
-
-        <div class="role-section-title" style="color:#e74c3c;">Dein Geheimnis</div>
-        <div class="role-secret"><div class="role-text">{{ role_card.secret }}</div></div>
-
-        <div class="role-section-title">Startinformation</div>
+      </div>
+      <div class="role-section">
+        <div class="role-section-label" style="color:#e74c3c;">Dein Geheimnis</div>
+        <div class="role-secret-box"><div class="role-text">{{ role_card.secret }}</div></div>
+      </div>
+      <div class="role-section">
+        <div class="role-section-label">Was du weißt</div>
         <div class="role-text">{{ role_card.starting_knowledge }}</div>
+      </div>
 
-        <div class="role-section-title">Deine Fähigkeit: {{ role_card.ability_name }}</div>
-        <div class="role-ability"><div class="role-text">{{ role_card.ability_desc }}</div></div>
+      {% if role_card.hired_by %}
+      <div class="role-section">
+        <div class="role-section-label" style="color:#e74c3c;">Wichtig</div>
+        <div class="role-secret-box"><div class="role-text">Jemand hat dich beauftragt: <strong>{{ role_card.hired_by }}</strong></div></div>
+      </div>
+      {% endif %}
+      {% if role_card.secret_lover_role %}
+      <div class="role-section">
+        <div class="role-section-label" style="color:#e91e63;">Geheime Affäre</div>
+        <div class="role-ability-box"><div class="role-text" style="color:#e91e63;">Dein/e Geliebte/r ist: <strong>{{ role_card.secret_lover_role }}</strong></div></div>
+      </div>
+      {% endif %}
+      {% if role_card.barons_feared_person %}
+      <div class="role-section">
+        <div class="role-section-label" style="color:#3498db;">Der Brief des Barons</div>
+        <div class="role-ability-box"><div class="role-text" style="color:#3498db;">Der Baron fürchtete: <strong>{{ role_card.barons_feared_person }}</strong></div></div>
+      </div>
+      {% endif %}
+      {% if role_card.surveillance_target %}
+      <div class="role-section">
+        <div class="role-section-label" style="color:#f39c12;">Deine Observationsakte</div>
+        <div class="role-ability-box"><div class="role-text" style="color:#f39c12;">Du hast eine Akte über: <strong>{{ role_card.surveillance_target }}</strong></div></div>
+      </div>
+      {% endif %}
+      {% if role_card.saw_in_library %}
+      <div class="role-section">
+        <div class="role-section-label">Was du gesehen hast</div>
+        <div class="role-ability-box"><div class="role-text">Du hast heute Nachmittag <strong>{{ role_card.saw_in_library }}</strong> in der Bibliothek gesehen.</div></div>
+      </div>
+      {% endif %}
+      {% if role_card.butler_saw_me %}
+      <div class="role-section">
+        <div class="role-section-label" style="color:#e74c3c;">Achtung</div>
+        <div class="role-secret-box"><div class="role-text">Der Butler hat dich in der Bibliothek gesehen.</div></div>
+      </div>
+      {% endif %}
 
-        <div class="role-section-title">Siegbedingung</div>
+      <div class="role-section">
+        <div class="role-section-label">Fähigkeit: {{ role_card.ability_name }}</div>
+        <div class="role-ability-box"><div class="role-text">{{ role_card.ability_desc }}</div></div>
+      </div>
+      <div class="role-section" style="margin-bottom:0;">
+        <div class="role-section-label">Siegbedingung</div>
         <div class="role-text">{{ role_card.win_condition }}</div>
-
-        {% if role_card.secret_lover_role %}
-        <div class="role-section-title" style="color:#e91e63;">Geheime Affäre</div>
-        <div class="role-ability"><div class="role-text" style="color:#e91e63;">Dein/e Geliebte/r ist: <strong>{{ role_card.secret_lover_role }}</strong>. Nur ihr zwei wisst das. Niemand sonst darf es erfahren.</div></div>
-        {% endif %}
-
-        {% if role_card.barons_feared_person %}
-        <div class="role-section-title" style="color:#3498db;">Brief des Barons</div>
-        <div class="role-ability"><div class="role-text" style="color:#3498db;">Der Baron fürchtete: <strong>{{ role_card.barons_feared_person }}</strong>. Das steht in deinem Brief. Ob das der Mörder ist — weißt du nicht.</div></div>
-        {% endif %}
-
-        {% if role_card.surveillance_target %}
-        <div class="role-section-title" style="color:#f39c12;">Observationsakte</div>
-        <div class="role-ability"><div class="role-text" style="color:#f39c12;">Du hast eine Akte über: <strong>{{ role_card.surveillance_target }}</strong>. Diese Person hat Geheimnisse.</div></div>
-        {% endif %}
-
-        <!-- Murderer reveal (hidden, revealed after 10 min) -->
-        {% if role_card.is_murderer %}
-        <div class="murderer-reveal" id="murderer-reveal">
-          <h3>⚠️ Du bist der Mörder</h3>
-          <div class="role-text">{{ role_card.murderer_motive }}</div>
-        </div>
-        {% endif %}
       </div>
     </div>
-
-    <!-- Abilities -->
-    <div class="game-sidebar-section fade-up delay-1">
-      <div class="sidebar-title">Aktionen & Fähigkeiten</div>
-      <div class="actions-grid" id="actions-grid">
-        {% if role_card.role_name %}
-        <button class="btn btn-sm" onclick="useAbility('use_letter')" id="ability-use_letter">Brief öffnen</button>
-        <button class="btn btn-sm" onclick="useAbility('call_interrogation')" id="ability-call_interrogation">Verhör einberufen</button>
-        <button class="btn btn-sm" onclick="useAbility('steal_will')" id="ability-steal_will">Testament stehlen</button>
-        <button class="btn btn-sm" onclick="useAbility('reveal_truth')" id="ability-reveal_truth">Wahrheit enthüllen</button>
-        {% endif %}
-
-        {% if phase == 4 %}
-        <button class="btn btn-primary btn-sm" onclick="showVote()">Abstimmen</button>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- Event Feed -->
-    <div class="game-sidebar-section fade-up delay-2">
-      <div class="sidebar-title">Ereignisse & Nachrichten</div>
-      <div class="event-feed" id="event-feed">
-        <div class="event-item event-broadcast">Das Spiel beginnt. Bleibt in eurer Rolle.</div>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Sidebar -->
-  <div class="game-sidebar">
-
-    {% if is_host %}
-    <!-- Host Controls -->
-    <div class="host-panel">
-      <div class="host-panel-title">Host-Steuerung</div>
-      <button class="btn btn-sm btn-full" style="margin-bottom:8px;" onclick="advancePhase()">
-        Nächste Phase →
-      </button>
-      <button class="btn btn-sm btn-full" onclick="window.location='/game/{{ code }}/resolve'">
-        Spiel auflösen
-      </button>
+  <!-- Host panel (only UI perk, no special role) -->
+  {% if is_host %}
+  <div class="host-panel fade-up">
+    <div class="host-label">Raumersteller – Spielsteuerung</div>
+    <div class="actions-wrap">
+      <button class="btn btn-sm" onclick="baronDies()">💀 Baron stirbt jetzt</button>
+      <button class="btn btn-sm" onclick="fireTrigger('midgame_20min')">🔍 Ermittlung vorantreiben</button>
+      <button class="btn btn-sm" onclick="fireTrigger('someone_gets_close_to_truth')">⚡ Spiel beschleunigen</button>
+      <button class="btn btn-sm" onclick="fireTrigger('random_any_time')">🎲 Zufallsmoment</button>
+      <a href="/game/{{ code }}/resolve" class="btn btn-sm" style="border-color:#e74c3c;color:#e74c3c;">Spiel auflösen</a>
     </div>
-    {% endif %}
+  </div>
+  {% endif %}
 
-    <!-- Clues -->
-    <div class="game-sidebar-section">
-      <div class="sidebar-title">Hinweise</div>
-      <div class="clue-count" id="clue-count">{{ clues|length }} Hinweis{% if clues|length != 1 %}e{% endif %}</div>
-      <div id="clue-list">
-        {% for clue in clues %}
-        <div class="clue-item" onclick="this.classList.toggle('open')">
-          <div class="clue-name">{{ clue.name }}</div>
-          <div class="clue-text">{{ clue.text }}</div>
-        </div>
-        {% endfor %}
-        {% if not clues %}
-        <div style="font-size:.8rem;color:var(--grey-5);font-style:italic;">Noch keine Hinweise. Sprich mit anderen Spielern.</div>
-        {% endif %}
+  <!-- Fähigkeiten -->
+  <div class="section-toggle" onclick="toggleSection('abilities')">
+    <h3>Aktionen & Fähigkeiten</h3>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body open" id="abilities">
+    <div class="actions-wrap" id="actions-wrap">
+      {% if role_card.can_be_ghost and not ghost_active %}
+      <button class="btn btn-sm" id="ab-baron_last_toast" onclick="useAbility('baron_last_toast')">🥂 Letzten Toast aussprechen</button>
+      {% endif %}
+      {% if role_card.role_name and 'Constanze' in role_card.role_name %}
+      <button class="btn btn-sm" id="ab-open_letter" onclick="useAbility('open_letter')">✉️ Brief öffnen</button>
+      {% endif %}
+      {% if role_card.role_name and ('Inspektor' in role_card.role_name or 'Inspector' in role_card.role_name) %}
+      <button class="btn btn-sm" id="ab-call_interrogation" onclick="useAbility('call_interrogation')">🔦 Verhör einberufen</button>
+      {% endif %}
+      {% if role_card.role_name and ('Voss' in role_card.role_name or 'Doctor' in role_card.role_name or 'Dr.' in role_card.role_name) %}
+      <button class="btn btn-sm" id="ab-diagnose" onclick="showDiagnosis()">🩺 Todesursache verkünden</button>
+      {% endif %}
+      {% if role_card.role_name and ('Rosa' in role_card.role_name or 'Cook' in role_card.role_name or 'Köchin' in role_card.role_name) %}
+      <button class="btn btn-sm" id="ab-reveal_truth" onclick="useAbility('reveal_truth')">😰 Auftraggeber enthüllen</button>
+      {% endif %}
+      {% if role_card.is_wildcard %}
+      <button class="btn btn-sm" id="ab-steal_will" onclick="useAbility('steal_will')">📜 Testament stehlen</button>
+      {% endif %}
+      <button class="btn btn-primary btn-sm" onclick="showVote()">⚖️ Mörder benennen</button>
+    </div>
+  </div>
+
+  <!-- Hinweise -->
+  <div class="section-toggle open" onclick="toggleSection('clues')">
+    <h3>Hinweise <span id="clue-badge" style="font-size:.7rem;color:var(--grey-5);margin-left:6px;"></span></h3>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body open" id="clues">
+    <div id="clue-list">
+      {% for clue in clues %}
+      <div class="clue-item" onclick="this.classList.toggle('open')">
+        <div class="clue-name">{{ clue.name }}</div>
+        <div class="clue-text">{{ clue.text }}</div>
       </div>
+      {% endfor %}
+      {% if not clues %}
+      <div style="font-size:.82rem;color:var(--grey-5);font-style:italic;">Noch keine Hinweise. Sprich mit anderen Spielern.</div>
+      {% endif %}
     </div>
+  </div>
 
-    <!-- Players -->
-    <div class="game-sidebar-section">
-      <div class="sidebar-title">Spieler ({{ player_count }})</div>
-      <div class="player-list-game" id="player-list-game">
-        <div style="font-size:.78rem;color:var(--grey-5);">Lade Spielerliste...</div>
-      </div>
+  <!-- Ereignis-Feed -->
+  <div class="section-toggle open" onclick="toggleSection('feed')">
+    <h3>Nachrichten & Aufgaben</h3>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body open" id="feed">
+    <div class="feed" id="event-feed">
+      <div class="feed-item feed-atmosphere">Das Spiel hat begonnen. Lest eure Rollen und stellt euch vor.</div>
     </div>
+  </div>
 
+  <!-- Spieler -->
+  <div class="section-toggle" onclick="toggleSection('players')">
+    <h3>Spieler ({{ player_count }})</h3>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="section-body" id="players">
+    <div class="players-list" id="players-list">
+      <div style="font-size:.8rem;color:var(--grey-5);">Lade...</div>
+    </div>
+  </div>
+
+  {% else %}
+  <div style="text-align:center;padding:48px;">
+    <div style="font-size:.9rem;color:var(--grey-5);">Spielrolle wird geladen...</div>
+    <div style="margin-top:16px;"><a href="/game/{{ code }}/play" class="btn btn-sm">Neu laden</a></div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Vote modal -->
+<div class="modal-overlay" id="vote-modal">
+  <div class="modal-box">
+    <div class="modal-title">Mörder benennen</div>
+    <div class="modal-sub">Wen verdächtigst du? Diese Entscheidung ist endgültig.</div>
+    <div id="vote-options"></div>
+    <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="submitVote()">Abstimmen</button>
+    <button class="btn btn-ghost btn-sm btn-full" style="margin-top:8px;" onclick="hideModal('vote-modal')">Abbrechen</button>
   </div>
 </div>
 
-<!-- Vote overlay -->
-<div class="vote-screen" id="vote-screen">
-  <div class="vote-box">
-    <div class="vote-title">Die Abstimmung</div>
-    <div class="vote-sub">Wer ist eurer Meinung nach der Mörder?</div>
-    <div id="vote-options"></div>
-    <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="submitVote()">Stimme abgeben</button>
-    <button class="btn btn-ghost btn-sm btn-full" style="margin-top:8px;" onclick="hideVote()">Abbrechen</button>
+<!-- Diagnosis modal -->
+<div class="modal-overlay" id="diag-modal">
+  <div class="modal-box">
+    <div class="modal-title">🩺 Todesursache verkünden</div>
+    <div class="modal-sub">Was hat den Baron getötet? Deine offizielle Diagnose.</div>
+    <input class="diag-input" id="diag-text" type="text" placeholder="z.B. Digitalis-Vergiftung, Herzversagen...">
+    <button class="btn btn-primary btn-full" onclick="submitDiagnosis()">Verkünden</button>
+    <button class="btn btn-ghost btn-sm btn-full" style="margin-top:8px;" onclick="hideModal('diag-modal')">Abbrechen</button>
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-const CODE    = '{{ code }}';
-const GAME_ID = '{{ game_id }}';
-const IS_HOST = {{ 'true' if is_host else 'false' }};
+const CODE      = '{{ code }}';
+const GAME_ID   = '{{ game_id }}';
+const IS_HOST   = {{ 'true' if is_host else 'false' }};
 const IS_MURDERER = {{ 'true' if role_card and role_card.is_murderer else 'false' }};
-let   lastEventTime = new Date(0).toISOString();
-let   selectedVote  = null;
-let   gameStartTime = Date.now();
-let   murdererRevealed = false;
-const MURDERER_REVEAL_DELAY = 10 * 60 * 1000; // 10 minutes
+const IS_BARON  = {{ 'true' if is_baron else 'false' }};
+let lastSince   = new Date(0).toISOString();
+let selectedVote = null;
+let gameStartTime = Date.now();
+let murdererRevealed = {{ 'true' if ghost_active else 'false' }};
+let allPlayers = [];
 
-// ── Murderer reveal countdown ─────────────────────────────────────────────
-if (IS_MURDERER) {
-  function checkMurdererReveal() {
-    if (murdererRevealed) return;
-    const elapsed = Date.now() - gameStartTime;
-    if (elapsed >= MURDERER_REVEAL_DELAY) {
-      document.getElementById('murderer-reveal')?.classList.add('show');
-      murdererRevealed = true;
-      addEvent('⚠️ Du bist jetzt der Mörder. Lies dein Motiv. Handle entsprechend.', 'warning');
-    } else {
-      const remaining = Math.ceil((MURDERER_REVEAL_DELAY - elapsed) / 1000);
-      if (remaining % 60 === 0) {
-        addEvent(`⏱ Du erhältst deine geheime Rolle in ${remaining/60} Minute(n)...`, 'private');
-      }
-    }
-  }
-  setInterval(checkMurdererReveal, 10000);
+// ── Accordion ─────────────────────────────────────────────────────────────
+function toggleSection(id) {
+  const toggle = document.querySelector(`[onclick="toggleSection('${id}')"]`);
+  const body   = document.getElementById(id);
+  if (!body) return;
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ── Murderer reveal after 10min ───────────────────────────────────────────
+if (IS_MURDERER && !murdererRevealed) {
+  setTimeout(() => {
+    const box = document.getElementById('murderer-box');
+    if (box) { box.classList.add('show'); murdererRevealed = true; }
+    addFeed('⚠️ Du bist der Mörder. Lies dein Motiv. Handle entsprechend.', 'task-private');
+  }, 10 * 60 * 1000); // 10 minutes
+  // Warn at 2 min
+  setTimeout(() => addFeed('⏱ In 8 Minuten erfährst du deine geheime Aufgabe...', 'atmosphere'), 2 * 60 * 1000);
+}
+
+// ── Feed ─────────────────────────────────────────────────────────────────
+function addFeed(text, type = 'atmosphere') {
+  const feed = document.getElementById('event-feed');
+  const el   = document.createElement('div');
+  el.className = `feed-item feed-${type} new-item`;
+  const now = new Date().toLocaleTimeString('de-AT', {hour:'2-digit',minute:'2-digit'});
+  el.innerHTML = `${text}<span class="feed-time">${now}</span>`;
+  feed.insertBefore(el, feed.firstChild);
+  while (feed.children.length > 40) feed.removeChild(feed.lastChild);
+  try { KrimiSound.playClick(); } catch(e){}
 }
 
 // ── Event polling ─────────────────────────────────────────────────────────
-function addEvent(text, type = 'broadcast') {
-  const feed = document.getElementById('event-feed');
-  const el   = document.createElement('div');
-  el.className = `event-item event-${type}`;
-  el.textContent = text;
-  feed.insertBefore(el, feed.firstChild);
-  // Limit to 30 events
-  while (feed.children.length > 30) feed.removeChild(feed.lastChild);
-}
-
 async function pollEvents() {
   try {
-    const res  = await fetch(`/api/game/${CODE}/events?since=${encodeURIComponent(lastEventTime)}`);
+    const res  = await fetch(`/api/game/${CODE}/events?since=${encodeURIComponent(lastSince)}`);
     const data = await res.json();
 
-    // Update phase
-    const phaseName = ['Ankunft & Vorstellung','Das Dinner','Der Mord','Die Ermittlung','Die Abrechnung'];
-    if (data.phase !== undefined) {
-      document.getElementById('phase-name').textContent = `Phase ${data.phase}: ${phaseName[data.phase] || ''}`;
-      // Update phase dots
-      document.querySelectorAll('.phase-dot').forEach((d, i) => {
-        d.className = 'phase-dot ' + (i < data.phase ? 'done' : i === data.phase ? 'active' : '');
-      });
-      if (data.phase === 4) {
-        document.getElementById('vote-screen') && addEvent('⚖️ DIE ABSTIMMUNG BEGINNT. Benutze den Abstimmen-Button.', 'warning');
-      }
+    if (data.baron_dead && IS_BARON) {
+      document.querySelector('.ghost-panel')?.style && (document.querySelector('.ghost-panel').style.display = 'block');
     }
 
-    // Process events
     for (const evt of (data.events || [])) {
-      const content = typeof evt.content === 'string' ? JSON.parse(evt.content) : evt.content;
-      lastEventTime = evt.created_at;
+      lastSince = evt.created_at;
+      let content = {};
+      try { content = typeof evt.content === 'string' ? JSON.parse(evt.content) : evt.content; } catch(e){}
+      const text = content.text || JSON.stringify(content);
 
-      if (evt.event_type === 'message') {
-        addEvent(content.text || JSON.stringify(content), evt.to_player ? 'private' : 'broadcast');
-      } else if (evt.event_type === 'clue_revealed') {
-        addEvent(`🔍 Ein Hinweis wurde enthüllt: ${content.clue}`, 'private');
-        fetchNewClues();
-      } else if (evt.event_type === 'task') {
-        addEvent(`📋 AUFGABE: ${content.instruction}`, 'task');
+      if (evt.event_type === 'task') {
+        const isPrivate = evt.to_player !== null;
+        addFeed(text, isPrivate ? 'task-private' : 'task');
       } else if (evt.event_type === 'atmosphere') {
-        addEvent(content.text, 'atmosphere');
-      } else if (evt.event_type === 'interrogation') {
-        addEvent('🔦 Inspektor Wahl ruft ein offizielles Verhör ein!', 'warning');
-      } else if (evt.event_type === 'warning') {
-        addEvent(content.text || '⚠️ Warnung', 'warning');
+        addFeed(text, 'atmosphere');
+      } else if (evt.event_type === 'clue_revealed') {
+        addFeed(text, 'clue');
+        fetchClues(); // refresh clues
+      } else if (evt.event_type === 'ghost_clue') {
+        addFeed(text, 'ghost');
+      } else if (evt.event_type === 'confession') {
+        addFeed(text, 'confession');
+      } else if (evt.event_type === 'announcement' || evt.event_type === 'interrogation') {
+        addFeed(text, 'announcement');
       }
     }
-  } catch(e) { console.warn('Poll error:', e); }
+  } catch(e) { console.warn('poll error', e); }
   setTimeout(pollEvents, 4000);
 }
 
-async function fetchNewClues() {
+// ── Clues ─────────────────────────────────────────────────────────────────
+async function fetchClues() {
   try {
     const res  = await fetch(`/api/game/${CODE}/clues`);
     const data = await res.json();
     const list = document.getElementById('clue-list');
-    const count = document.getElementById('clue-count');
-    if (data.clues) {
+    const badge = document.getElementById('clue-badge');
+    if (data.clues && data.clues.length > 0) {
       list.innerHTML = data.clues.map(c =>
-        `<div class="clue-item new" onclick="this.classList.toggle('open')">
+        `<div class="clue-item new-item" onclick="this.classList.toggle('open')">
           <div class="clue-name">${c.name}</div>
           <div class="clue-text">${c.text}</div>
         </div>`
       ).join('');
-      count.textContent = `${data.clues.length} Hinweis${data.clues.length !== 1 ? 'e' : ''}`;
+      badge.textContent = `(${data.clues.length})`;
     }
   } catch(e){}
 }
 
-// ── Voting ─────────────────────────────────────────────────────────────────
-let votePlayers = [];
-
-async function showVote() {
+// ── Players ───────────────────────────────────────────────────────────────
+async function loadPlayers() {
   try {
-    const res  = await fetch(`/api/lobby/${CODE}`);
+    const res  = await fetch(`/api/game/${CODE}/players`);
     const data = await res.json();
-    votePlayers = data.players || [];
-    const opts = document.getElementById('vote-options');
-    opts.innerHTML = votePlayers.map((name, i) =>
-      `<button class="vote-option" onclick="selectVote(this, '${name}')" data-name="${name}">${name}</button>`
+    allPlayers = data.players || [];
+    const list = document.getElementById('players-list');
+    const ghostSel = document.getElementById('ghost-target');
+    list.innerHTML = allPlayers.map(p =>
+      `<div class="player-row"><div class="player-av">${(p.name||'?')[0].toUpperCase()}</div><div style="font-size:.88rem;">${p.name}</div></div>`
     ).join('');
+    if (ghostSel) {
+      ghostSel.innerHTML = '<option value="">– Person wählen –</option>' +
+        allPlayers.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    }
   } catch(e){}
-  document.getElementById('vote-screen').classList.add('show');
 }
 
-function hideVote() { document.getElementById('vote-screen').classList.remove('show'); }
-
-function selectVote(btn, name) {
-  document.querySelectorAll('.vote-option').forEach(b => b.classList.remove('selected'));
+// ── Vote ──────────────────────────────────────────────────────────────────
+async function showVote() {
+  const opts = document.getElementById('vote-options');
+  opts.innerHTML = allPlayers.map(p =>
+    `<button class="vote-opt" onclick="selectVote(this,'${p.id}')">${p.name}</button>`
+  ).join('');
+  document.getElementById('vote-modal').classList.add('open');
+}
+function selectVote(btn, id) {
+  document.querySelectorAll('.vote-opt').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-  selectedVote = name;
+  selectedVote = id;
 }
-
 async function submitVote() {
   if (!selectedVote) return;
   await fetch(`/game/${CODE}/vote`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({accused_id: selectedVote})
   });
-  hideVote();
-  addEvent(`✅ Du hast für ${selectedVote} gestimmt.`, 'private');
+  hideModal('vote-modal');
+  addFeed('✅ Deine Stimme wurde abgegeben.', 'clue');
 }
+function hideModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// ── Abilities ──────────────────────────────────────────────────────────────
-async function useAbility(ability) {
-  const btn = document.getElementById(`ability-${ability}`);
-  if (btn && btn.classList.contains('ability-used')) return;
-
+// ── Abilities ─────────────────────────────────────────────────────────────
+async function useAbility(ability, extra = {}) {
+  const btn = document.getElementById(`ab-${ability}`);
+  if (btn && btn.classList.contains('action-used')) return;
   const res  = await fetch(`/api/game/${CODE}/use-ability`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ability})
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ability, ...extra})
   });
   const data = await res.json();
-
   if (data.ok) {
-    if (btn) btn.classList.add('ability-used');
-    addEvent(`✅ Fähigkeit genutzt: ${ability}`, 'private');
-    if (data.message) addEvent(data.message, 'private');
+    if (btn) btn.classList.add('action-used');
+    if (data.message) addFeed(`✅ ${data.message}`, 'clue');
   } else {
-    addEvent(`❌ ${data.error || 'Fähigkeit nicht verfügbar'}`, 'warning');
+    addFeed(`❌ ${data.error || 'Nicht verfügbar'}`, 'task-private');
   }
 }
 
-// ── Host: Advance phase ────────────────────────────────────────────────────
-async function advancePhase() {
-  const res  = await fetch(`/game/${CODE}/advance-phase`, {method:'POST'});
-  const data = await res.json();
-  if (data.ok) addEvent(`📢 Phase ${data.new_phase} gestartet`, 'atmosphere');
+function showDiagnosis() { document.getElementById('diag-modal').classList.add('open'); }
+async function submitDiagnosis() {
+  const text = document.getElementById('diag-text').value.trim();
+  if (!text) return;
+  await useAbility('diagnose', {diagnosis: text});
+  hideModal('diag-modal');
 }
 
-// ── Load player list ───────────────────────────────────────────────────────
-async function loadPlayers() {
-  try {
-    const res  = await fetch(`/api/lobby/${CODE}`);
-    const data = await res.json();
-    const list = document.getElementById('player-list-game');
-    if (data.players) {
-      list.innerHTML = data.players.map(name =>
-        `<div class="player-row">
-          <div class="player-avatar-sm">${name[0]?.toUpperCase()}</div>
-          <div class="player-name-sm">${name}</div>
-        </div>`
-      ).join('');
-    }
-  } catch(e){}
+// ── Ghost whisper ─────────────────────────────────────────────────────────
+async function sendGhostWhisper() {
+  const target = document.getElementById('ghost-target')?.value;
+  const clue   = document.getElementById('ghost-clue')?.value.trim();
+  if (!target || !clue) { addFeed('Bitte Person und Hinweis auswählen.', 'atmosphere'); return; }
+  await useAbility('ghost_whisper', {target_id: target, clue_text: clue});
+  document.getElementById('ghost-clue').value = '';
 }
 
-// Start
+// ── Host triggers ─────────────────────────────────────────────────────────
+async function baronDies() {
+  await fetch(`/game/${CODE}/baron-dies`, {method:'POST'});
+  addFeed('💀 Der Baron wurde für tot erklärt. Die Ermittlung beginnt.', 'announcement');
+}
+async function fireTrigger(name) {
+  await fetch(`/game/${CODE}/trigger/${name}`, {method:'POST'});
+  addFeed('🎭 Neues Ereignis ausgelöst.', 'atmosphere');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
 loadPlayers();
-setTimeout(pollEvents, 1000);
+fetchClues();
+setTimeout(pollEvents, 1500);
 </script>
 {% endblock %}
