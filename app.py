@@ -3,7 +3,7 @@ from functools import wraps
 from translations import get_t, SUPPORTED_LANGS
 from game_engine import (assign_roles, get_role_card, get_initial_clues,
                          check_win_conditions, get_ending_text,
-                         get_physical_tasks_for_phase, get_atmosphere_message)
+                         get_tasks_for_trigger, get_atmosphere_message)
 import os, random, string, json
 import urllib.request, urllib.error
 
