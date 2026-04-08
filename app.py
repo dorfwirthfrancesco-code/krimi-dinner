@@ -416,6 +416,15 @@ def shop():
 
     return render_template('shop.html', t=t, items=items)
 
+@app.route('/debug/ls')
+def debug_ls():
+    return jsonify({
+        'api_key_set': bool(LS_API_KEY),
+        'store_id': LS_STORE_ID,
+        'variants': {k: bool(v) for k, v in LS_VARIANTS.items()},
+        'variant_venedig_raw': repr(os.environ.get('LS_VARIANT_VENEDIG', 'NOT SET')),
+    })
+
 @app.route('/shop/buy/<scenario_id>')
 @login_required
 def shop_buy(scenario_id):
