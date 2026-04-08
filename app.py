@@ -31,15 +31,16 @@ def ls_headers():
 def ls_create_checkout(variant_id, user_email, user_id, scenario):
     """Create a Lemon Squeezy checkout URL."""
     if not LS_API_KEY or not variant_id:
+        print(f"LS checkout missing: api_key={bool(LS_API_KEY)}, variant={variant_id}")
         return None
+    checkout_data = {'custom': {'user_id': user_id, 'scenario': scenario}}
+    if user_email:
+        checkout_data['email'] = user_email
     payload = json.dumps({
         'data': {
             'type': 'checkouts',
             'attributes': {
-                'checkout_data': {
-                    'email': user_email,
-                    'custom': {'user_id': user_id, 'scenario': scenario},
-                },
+                'checkout_data': checkout_data,
                 'checkout_options': {
                     'embed': False,
                     'media': False,
@@ -419,29 +420,26 @@ def shop():
 @login_required
 def shop_buy(scenario_id):
     """Create Lemon Squeezy checkout and redirect."""
-    uid   = session.get('user_id')
-    token = session.get('access_token')
+    uid   = session.get('user_id', '')
+    token = session.get('access_token', '')
+    email = session.get('email', '')
 
-    # Get user email
-    profile = get_profile(uid, token) or {}
-    email = profile.get('email', '')
-    if not email and SB_OK:
-        # Try from auth
+    # Try to get email from profile
+    if not email and SB_OK and uid and uid != 'demo':
         try:
-            r = sb_get_auth_user(token)
-            email = r.get('email', '')
+            rows = sb_get('profiles', f'id=eq.{uid}&select=username', token) or []
         except:
             pass
 
-    variant_id = LS_VARIANTS.get(scenario_id)
+    variant_id = LS_VARIANTS.get(scenario_id, '').strip()
     if not variant_id:
-        # No product set up yet — show coming soon
         return render_template('shop_coming_soon.html', t=get_t(session.get('lang','en')))
 
     url = ls_create_checkout(variant_id, email, uid, scenario_id)
     if url:
         return redirect(url)
-    return redirect(url_for('shop'))
+    # Show error page instead of silent redirect
+    return render_template('shop_coming_soon.html', t=get_t(session.get('lang','en')))
 
 @app.route('/shop/success')
 @login_required
