@@ -7,6 +7,42 @@ KrimiDinner Game Engine v2
 import random
 import json
 from scenarios.dunkelbach import SCENARIO
+from scenarios.translations_dunkelbach import (
+    ROLE_TRANSLATIONS, CLUE_TRANSLATIONS, TASK_TRANSLATIONS, ENDING_TRANSLATIONS
+)
+
+FALLBACK_LANGS = {'fr': 'en', 'it': 'en', 'es': 'en', 'pt': 'en'}
+
+def _t(d, lang):
+    """Get translation from dict, fallback to EN then DE."""
+    if isinstance(d, str): return d
+    return d.get(lang) or d.get(FALLBACK_LANGS.get(lang,'en')) or d.get('en') or d.get('de','')
+
+def _apply_role_translation(role_key, role_data, lang):
+    """Overlay FR/IT/ES/PT translations onto a role dict copy."""
+    if lang in ('de','en') or role_key not in ROLE_TRANSLATIONS:
+        return role_data
+    t = ROLE_TRANSLATIONS[role_key]
+    result = dict(role_data)
+    for field in ('name','intro','appearance','secret','win_condition','starting_knowledge','murderer_motive_if_assigned'):
+        if field in t:
+            orig = result.get(field, {})
+            if isinstance(orig, dict):
+                merged = dict(orig)
+                merged[lang] = _t(t[field], lang)
+                result[field] = merged
+    if 'ability' in t:
+        orig_ab = dict(result.get('ability', {}))
+        if 'name' in t['ability']:
+            n = dict(orig_ab.get('name', {}))
+            n[lang] = _t(t['ability']['name'], lang)
+            orig_ab['name'] = n
+        if 'description' in t['ability']:
+            d = dict(orig_ab.get('description', {}))
+            d[lang] = _t(t['ability']['description'], lang)
+            orig_ab['description'] = d
+        result['ability'] = orig_ab
+    return result
 
 SCENARIOS = {"dunkelbach": SCENARIO}
 
@@ -58,7 +94,7 @@ def assign_roles(scenario_id, player_ids, lang="de"):
         role_key, role_data = selected[i]
         assignments[pid] = {
             "role_key":          role_key,
-            "role_name":         role_data["name"][lang],
+            "role_name":         _t(_apply_role_translation(role_key, role_data, lang)["name"], lang),
             "is_murderer":       (role_key == murderer_key or role_key == second_murderer_key),
             "is_second_murderer": role_key == second_murderer_key,
             "is_wildcard":       role_data.get("is_wildcard", False),
@@ -142,22 +178,23 @@ def get_role_card(player_id, assignments, scenario_id, lang="de"):
     role_key  = a["role_key"]
     role_data = scenario["roles"][role_key]
 
+    role_data = _apply_role_translation(role_key, role_data, lang)
     card = {
-        "role_name":      role_data["name"][lang],
-        "intro":          role_data["intro"][lang],
-        "appearance":     role_data["appearance"][lang],
-        "secret":         role_data["secret"][lang],
-        "ability_name":   role_data["ability"]["name"][lang],
-        "ability_desc":   role_data["ability"]["description"][lang],
-        "win_condition":  role_data["win_condition"][lang],
-        "starting_knowledge": role_data["starting_knowledge"][lang],
+        "role_name":      _t(role_data["name"], lang),
+        "intro":          _t(role_data["intro"], lang),
+        "appearance":     _t(role_data["appearance"], lang),
+        "secret":         _t(role_data["secret"], lang),
+        "ability_name":   _t(role_data["ability"]["name"], lang),
+        "ability_desc":   _t(role_data["ability"]["description"], lang),
+        "win_condition":  _t(role_data["win_condition"], lang),
+        "starting_knowledge": _t(role_data["starting_knowledge"], lang),
         "is_murderer":    a.get("is_murderer", False),
         "is_wildcard":    a.get("is_wildcard", False),
         "can_be_ghost":   a.get("can_be_ghost", False),
     }
 
     if a.get("is_murderer"):
-        card["murderer_motive"] = role_data.get("murderer_motive_if_assigned", {}).get(lang, "")
+        card["murderer_motive"] = _t(role_data.get("murderer_motive_if_assigned", {}), lang)
 
     if a.get("knows_murderer_role"):
         card["knows_murderer_role"] = a["knows_murderer_role"]
@@ -195,7 +232,10 @@ def get_initial_clues(player_id, assignments, scenario_id, lang="de"):
     for ck in role_data.get("clues_i_hold", []):
         cd = scenario["clues"].get(ck)
         if cd:
-            clues.append({"id": ck, "name": cd["name"][lang], "text": cd["text"][lang]})
+            tc = CLUE_TRANSLATIONS.get(ck, {})
+            name = _t(tc.get("name", cd["name"]), lang) if lang not in ("de","en") else _t(cd["name"], lang)
+            text = _t(tc.get("text", cd["text"]), lang) if lang not in ("de","en") else _t(cd["text"], lang)
+            clues.append({"id": ck, "name": name, "text": text})
     return clues
 
 
@@ -220,7 +260,11 @@ def get_tasks_for_trigger(trigger, game_state, assignments, player_ids, scenario
         recipients  = _resolve_recipients(assigned_to, task, game_state, assignments, player_ids)
 
         for pid in recipients:
-            instruction = task.get("instruction", {}).get(lang, "")
+            raw_instr = task.get("instruction", {})
+        if lang not in ("de","en") and task_id in TASK_TRANSLATIONS:
+            instruction = TASK_TRANSLATIONS[task_id].get(lang, raw_instr.get("en", raw_instr.get("de","")))
+        else:
+            instruction = raw_instr.get(lang, raw_instr.get("en", raw_instr.get("de","")))
             if not instruction:
                 continue
 
@@ -382,7 +426,12 @@ def check_win_conditions(game_state, assignments, votes, scenario_id):
 def get_ending_text(ending_type, murderer_name, scenario_id, lang="de"):
     scenario = get_scenario(scenario_id)
     ending   = scenario["endings"].get(ending_type, scenario["endings"]["murderer_caught"])
-    title    = ending.get("title", {}).get(lang, ending.get("title", {}).get("en", ""))
-    text_raw = ending.get("text", {})
-    text     = text_raw.get(lang, text_raw.get("en", "")) if isinstance(text_raw, dict) else str(text_raw)
+    # Merge base (de/en) with extra translations (fr/it/es/pt)
+    base_title = dict(ending.get("title", {}))
+    base_text  = dict(ending.get("text",  {})) if isinstance(ending.get("text"), dict) else {}
+    et = ENDING_TRANSLATIONS.get(ending_type, {})
+    if et.get("title"): base_title.update(et["title"])
+    if et.get("text"):  base_text.update(et["text"])
+    title = _t(base_title, lang)
+    text  = _t(base_text, lang)
     return {"title": title, "text": text.replace("{murderer_name}", murderer_name)}

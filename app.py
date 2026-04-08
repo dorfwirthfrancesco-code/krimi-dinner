@@ -984,14 +984,19 @@ def game_resolve(code):
     winners       = result.get('winners', [])
     winner_names  = [player_names.get(w, '?') for w in winners]
 
-    # Save history for all players
+    # Save history for all players with full stats
     for r in all_roles:
         pid = r['user_id']
+        won = pid in winners
+        is_murderer = r.get('is_murderer', False)
         sb_post('game_history', {
-            'user_id':  pid,
-            'scenario': 'dunkelbach',
-            'role':     r['role_key'],
-            'result':   'won' if pid in winners else 'lost',
+            'user_id':        pid,
+            'scenario':       'dunkelbach',
+            'role':           r['role_key'],
+            'result':         'won' if won else 'lost',
+            'is_murderer':    is_murderer,
+            'murderer_caught': result.get('ending') in ('murderer_caught','perfect_solve'),
+            'players_count':  len(all_roles),
         }, token)
 
     # Build role reveals
