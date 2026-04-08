@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Kauf erfolgreich – Krimi Dinner{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:64px 24px;" class="fade-up">
+  <div style="font-size:3rem;margin-bottom:24px;">🎭</div>
+  <h1 style="font-family:'DM Serif Display',serif;font-size:2rem;margin-bottom:12px;">Kauf erfolgreich!</h1>
+  <p style="color:var(--grey-5);margin-bottom:32px;">Dein neues Szenario wurde deinem Account hinzugefügt.<br>Es kann einen Moment dauern bis es erscheint.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="/create-game" class="btn btn-primary">Spiel erstellen</a>
+    <a href="/shop" class="btn">Zurück zum Shop</a>
+  </div>
+</div>
+{% endblock %}

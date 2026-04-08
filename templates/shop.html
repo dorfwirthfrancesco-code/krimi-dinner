@@ -1,48 +1,74 @@
 {% extends "base.html" %}
 {% block title %}{{ t.shop_title }} – Krimi Dinner{% endblock %}
+{% block head %}
+<style>
+  .shop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+  .shop-item { background:var(--grey-1); border:1px solid var(--grey-2); border-radius:10px; padding:22px; display:flex; flex-direction:column; gap:10px; transition:border-color .2s; }
+  .shop-item:hover { border-color:var(--grey-3); }
+  .shop-item.owned { border-color:rgba(39,174,96,.3); }
+  .shop-item-top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .shop-item-name { font-family:'DM Serif Display',serif; font-size:1.05rem; color:var(--white); }
+  .shop-item-genre { font-size:.72rem; color:var(--grey-5); margin-top:3px; letter-spacing:.04em; }
+  .shop-item-meta { display:flex; gap:16px; }
+  .shop-meta-item { font-size:.75rem; color:var(--grey-5); }
+  .shop-meta-item strong { display:block; color:var(--white); font-size:.8rem; margin-top:1px; }
+  .shop-price { font-family:'DM Serif Display',serif; font-size:1.4rem; color:var(--white); }
+  .shop-price.owned-label { font-family:'DM Sans',sans-serif; font-size:.8rem; font-weight:600; color:#27ae60; letter-spacing:.08em; text-transform:uppercase; }
+  .tag { font-size:.55rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:3px 8px; border-radius:3px; }
+  .tag-white { background:var(--white); color:var(--black); }
+  .tag-green { background:#27ae60; color:#fff; }
+  .free-item { border-color:rgba(39,174,96,.25); background:linear-gradient(135deg,var(--grey-1),rgba(39,174,96,.04)); }
+</style>
+{% endblock %}
 {% block content %}
 <div class="page-header fade-up">
   <div class="eyebrow">{{ t.shop_eyebrow }}</div>
   <h1>{{ t.shop_title }}</h1>
   <p>{{ t.shop_sub }}</p>
 </div>
-<div class="shop-grid">
 
-  <!-- Das Herrenhaus Dunkelbach — kostenlos, spielbar -->
-  <div class="shop-item fade-up" style="animation-delay:0s; border-color:var(--grey-3);">
+<!-- Free scenario first -->
+<div class="shop-grid" style="margin-bottom:14px;">
+  <div class="shop-item free-item fade-up">
     <div class="shop-item-top">
       <div>
         <div class="shop-item-name">Das Herrenhaus Dunkelbach</div>
         <div class="shop-item-genre">Thriller · 1923</div>
       </div>
-      <span class="tag tag-white">Kostenlos</span>
+      <span class="tag tag-green">Kostenlos</span>
     </div>
     <div class="shop-item-meta">
       <div class="shop-meta-item">{{ t.shop_players }}<strong>4–10</strong></div>
       <div class="shop-meta-item">{{ t.shop_duration }}<strong>90–120 min</strong></div>
     </div>
-    <div style="font-size:.8rem;color:var(--grey-5);margin-bottom:14px;line-height:1.5;">
-      Ein Sommerabend, 1923. Baron Aldric von Dunkelbach lädt seine engsten Vertrauten ein. Am Morgen danach: ein Toter.
-    </div>
-    <div class="shop-price shop-price-owned">{{ t.shop_owned }}</div>
-    <button class="btn btn-primary btn-sm btn-full" onclick="window.location='/create-game'">{{ t.shop_play }}</button>
+    <div style="font-size:.8rem;color:var(--grey-5);line-height:1.5;">Sommer 1923. Ein Mord. Zehn Verdächtige. Tausend Möglichkeiten.</div>
+    <div class="shop-price owned-label">✓ Inklusive</div>
+    <a href="/create-game" class="btn btn-primary btn-sm">{{ t.shop_play }}</a>
   </div>
+</div>
 
+<!-- Paid scenarios -->
+<div class="shop-grid">
   {% for item in items %}
-  <div class="shop-item fade-up" style="animation-delay:{{ (loop.index) * 0.07 }}s">
+  <div class="shop-item {% if item.owned %}owned{% endif %} fade-up">
     <div class="shop-item-top">
       <div>
         <div class="shop-item-name">{{ item.name }}</div>
         <div class="shop-item-genre">{{ item.genre }}</div>
       </div>
-      {% if item.tag %}<span class="tag {% if item.tag=='New' or item.tag=='Neu' %}tag-white{% endif %}">{{ item.tag }}</span>{% endif %}
+      {% if item.tag %}<span class="tag tag-white">{{ item.tag }}</span>{% endif %}
     </div>
     <div class="shop-item-meta">
       <div class="shop-meta-item">{{ t.shop_players }}<strong>{{ item.players }}</strong></div>
       <div class="shop-meta-item">{{ t.shop_duration }}<strong>{{ item.duration }}</strong></div>
     </div>
-    <div class="shop-price">{{ item.price }} €</div>
-    <button class="btn btn-primary btn-sm btn-full">{{ t.shop_buy }}</button>
+    {% if item.owned %}
+      <div class="shop-price owned-label">✓ {{ t.shop_owned }}</div>
+      <a href="/create-game" class="btn btn-primary btn-sm">{{ t.shop_play }}</a>
+    {% else %}
+      <div class="shop-price">{{ item.price }} €</div>
+      <a href="/shop/buy/{{ item.id }}" class="btn btn-primary btn-sm">{{ t.shop_buy }}</a>
+    {% endif %}
   </div>
   {% endfor %}
 </div>

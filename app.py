@@ -4,8 +4,80 @@ from translations import get_t, SUPPORTED_LANGS
 from game_engine import (assign_roles, get_role_card, get_initial_clues,
                          check_win_conditions, get_ending_text,
                          get_tasks_for_trigger, get_atmosphere_message)
-import os, random, string, json
+import os, random, string, json, hmac, hashlib
 import urllib.request, urllib.error
+
+# ── Lemon Squeezy Config ─────────────────────────────────────────────────────
+LS_API_KEY      = os.environ.get('LEMONSQUEEZY_API_KEY', '')
+LS_STORE_ID     = os.environ.get('LEMONSQUEEZY_STORE_ID', '339836')
+LS_WEBHOOK_SECRET = os.environ.get('LEMONSQUEEZY_WEBHOOK_SECRET', '')
+
+# Variant IDs for each scenario (set after creating products in LS dashboard)
+LS_VARIANTS = {
+    'venedig':   os.environ.get('LS_VARIANT_VENEDIG', ''),
+    'butler':    os.environ.get('LS_VARIANT_BUTLER', ''),
+    'noir':      os.environ.get('LS_VARIANT_NOIR', ''),
+    'dunkelberg': os.environ.get('LS_VARIANT_DUNKELBERG', ''),
+    'cocktails': os.environ.get('LS_VARIANT_COCKTAILS', ''),
+}
+
+def ls_headers():
+    return {
+        'Authorization': f'Bearer {LS_API_KEY}',
+        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
+    }
+
+def ls_create_checkout(variant_id, user_email, user_id, scenario):
+    """Create a Lemon Squeezy checkout URL."""
+    if not LS_API_KEY or not variant_id:
+        return None
+    payload = json.dumps({
+        'data': {
+            'type': 'checkouts',
+            'attributes': {
+                'checkout_data': {
+                    'email': user_email,
+                    'custom': {'user_id': user_id, 'scenario': scenario},
+                },
+                'checkout_options': {
+                    'embed': False,
+                    'media': False,
+                    'button_color': '#f5f5f3',
+                },
+                'product_options': {
+                    'redirect_url': f'https://web-production-ad99.up.railway.app/shop/success?scenario={scenario}',
+                    'receipt_button_text': 'Zurück zum Shop',
+                    'receipt_link_url': 'https://web-production-ad99.up.railway.app/shop',
+                },
+                'expires_at': None,
+            },
+            'relationships': {
+                'store': {'data': {'type': 'stores', 'id': str(LS_STORE_ID)}},
+                'variant': {'data': {'type': 'variants', 'id': str(variant_id)}},
+            },
+        }
+    }).encode()
+    req = urllib.request.Request(
+        'https://api.lemonsqueezy.com/v1/checkouts',
+        data=payload, headers=ls_headers(), method='POST'
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read())
+            return data['data']['attributes']['url']
+    except Exception as e:
+        print(f'LS checkout error: {e}')
+        return None
+
+def ls_verify_webhook(payload_bytes, signature):
+    """Verify Lemon Squeezy webhook signature."""
+    if not LS_WEBHOOK_SECRET:
+        return True  # skip in dev
+    expected = hmac.new(
+        LS_WEBHOOK_SECRET.encode(), payload_bytes, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature or '')
 
 def load_env():
     path = os.path.join(os.path.dirname(__file__), '.env')
@@ -320,17 +392,107 @@ def home():
 @app.route('/shop')
 @login_required
 def shop():
-    t = get_t(session.get('lang', 'en'))
-    items = [
-        {'name': 'Das Venedig-Komplott',   'genre': t['genre_classic'],    'players': '4–8',  'duration': '90 min',  'price': '4.99', 'owned': False, 'tag': 'New'},
-        {'name': 'Die Rache des Butlers',  'genre': t['genre_cozy'],       'players': '3–6',  'duration': '60 min',  'price': '2.99', 'owned': False, 'tag': ''},
-        {'name': 'Noir Downtown',          'genre': t['genre_hardboiled'], 'players': '4–8',  'duration': '90 min',  'price': '4.99', 'owned': False, 'tag': ''},
-        {'name': 'Schloss Dunkelberg',     'genre': t['genre_gothic'],     'players': '5–9',  'duration': '120 min', 'price': '5.99', 'owned': False, 'tag': 'New'},
-        {'name': 'Cocktails & Leichen',    'genre': t['genre_comedy'],     'players': '4–7',  'duration': '60 min',  'price': '2.99', 'owned': False, 'tag': ''},
-    ]
-    return render_template('shop.html', items=items)
+    t        = get_t(session.get('lang', 'en'))
+    uid      = session.get('user_id')
+    token    = session.get('access_token')
 
-# ── Profile ───────────────────────────────────────────────────────────────────
+    # Get user's purchases
+    owned = {'dunkelbach'}  # always free
+    if SB_OK and uid != 'demo':
+        rows = sb_get('purchases', f'user_id=eq.{uid}&select=scenario', token) or []
+        for r in rows:
+            owned.add(r['scenario'])
+
+    items = [
+        {'id': 'venedig',    'name': 'Das Venedig-Komplott',  'genre': t['genre_classic'],    'players': '4–8',  'duration': '90 min',  'price': '4.99', 'tag': 'New'},
+        {'id': 'butler',     'name': 'Die Rache des Butlers', 'genre': t['genre_cozy'],       'players': '3–6',  'duration': '60 min',  'price': '2.99', 'tag': ''},
+        {'id': 'noir',       'name': 'Noir Downtown',         'genre': t['genre_hardboiled'], 'players': '4–8',  'duration': '90 min',  'price': '4.99', 'tag': ''},
+        {'id': 'dunkelberg', 'name': 'Schloss Dunkelberg',    'genre': t['genre_gothic'],     'players': '5–9',  'duration': '120 min', 'price': '5.99', 'tag': 'New'},
+        {'id': 'cocktails',  'name': 'Cocktails & Leichen',   'genre': t['genre_comedy'],     'players': '4–7',  'duration': '60 min',  'price': '2.99', 'tag': ''},
+    ]
+    for item in items:
+        item['owned'] = item['id'] in owned
+
+    return render_template('shop.html', t=t, items=items)
+
+@app.route('/shop/buy/<scenario_id>')
+@login_required
+def shop_buy(scenario_id):
+    """Create Lemon Squeezy checkout and redirect."""
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+
+    # Get user email
+    profile = get_profile(uid, token) or {}
+    email = profile.get('email', '')
+    if not email and SB_OK:
+        # Try from auth
+        try:
+            r = sb_get_auth_user(token)
+            email = r.get('email', '')
+        except:
+            pass
+
+    variant_id = LS_VARIANTS.get(scenario_id)
+    if not variant_id:
+        # No product set up yet — show coming soon
+        return render_template('shop_coming_soon.html', t=get_t(session.get('lang','en')))
+
+    url = ls_create_checkout(variant_id, email, uid, scenario_id)
+    if url:
+        return redirect(url)
+    return redirect(url_for('shop'))
+
+@app.route('/shop/success')
+@login_required
+def shop_success():
+    scenario = request.args.get('scenario', '')
+    t = get_t(session.get('lang', 'en'))
+    return render_template('shop_success.html', t=t, scenario=scenario)
+
+@app.route('/lemon/webhook', methods=['POST'])
+def lemon_webhook():
+    """Handle Lemon Squeezy webhook — record purchase in DB."""
+    payload = request.get_data()
+    sig     = request.headers.get('X-Signature', '')
+
+    if not ls_verify_webhook(payload, sig):
+        return jsonify({'error': 'invalid signature'}), 401
+
+    try:
+        data  = json.loads(payload)
+        event = request.headers.get('X-Event-Name', '')
+
+        if event == 'order_created':
+            attrs    = data.get('data', {}).get('attributes', {})
+            custom   = attrs.get('custom_data', {}) or {}
+            user_id  = custom.get('user_id')
+            scenario = custom.get('scenario')
+            order_id = str(data.get('data', {}).get('id', ''))
+            variant_id = str(attrs.get('first_order_item', {}).get('variant_id', ''))
+            amount   = attrs.get('total', 0)
+            currency = attrs.get('currency', 'EUR')
+            status   = attrs.get('status', '')
+
+            if user_id and scenario and status in ('paid', 'complete'):
+                # Check not already recorded
+                existing = sb_get('purchases', f'user_id=eq.{user_id}&scenario=eq.{scenario}&select=id', None)
+                if not existing:
+                    sb_post('purchases', {
+                        'user_id':          user_id,
+                        'scenario':         scenario,
+                        'lemon_order_id':   order_id,
+                        'lemon_variant_id': variant_id,
+                        'amount_cents':     amount,
+                        'currency':         currency,
+                        'status':           'paid',
+                    }, None)
+    except Exception as e:
+        print(f'Webhook error: {e}')
+
+    return jsonify({'ok': True}), 200
+
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
