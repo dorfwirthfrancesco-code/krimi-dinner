@@ -373,3 +373,50 @@ select option { background: var(--grey-1); }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .shop-grid  { grid-template-columns: 1fr; }
 }
+
+/* Error page shake */
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
+
+/* Smooth page load */
+main, .main-content {
+  animation: fadeUp .3s ease both;
+}
+
+/* Card hover lift */
+.card {
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+
+/* Action card press effect */
+.action-card:active {
+  transform: scale(.98);
+}
+
+/* Bottom nav active indicator */
+.bottom-nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 24px; height: 2px;
+  background: var(--white);
+  border-radius: 0 0 2px 2px;
+}
+.bottom-nav-item { position: relative; }
+
+/* Safe area for iPhone notch */
+.bottom-nav {
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+.content-area {
+  padding-bottom: max(100px, calc(80px + env(safe-area-inset-bottom)));
+}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Fehler – Krimi Dinner{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:80px 24px;" class="fade-up">
+  <div style="font-size:4rem;margin-bottom:24px;animation:shake .5s ease;">💀</div>
+  <div style="font-family:'DM Serif Display',serif;font-size:5rem;color:var(--grey-3);line-height:1;margin-bottom:8px;">500</div>
+  <h1 style="font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:12px;">Etwas ist schiefgelaufen</h1>
+  <p style="color:var(--grey-5);margin-bottom:32px;line-height:1.6;">Ein unerwarteter Fehler ist aufgetreten.<br>Versuche es in einem Moment erneut.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn btn-primary" onclick="location.reload()">Erneut versuchen</button>
+    <a href="/home" class="btn">Zur Startseite</a>
+  </div>
+</div>
+{% endblock %}

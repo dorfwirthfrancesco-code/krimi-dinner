@@ -2,7 +2,18 @@
 <html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- PWA -->
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Krimi Dinner">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Krimi Dinner">
+  <meta property="og:description" content="Multiplayer Murder Mystery Dinner Game">
+  <meta property="og:type" content="website">
   <title>{% block title %}Krimi Dinner{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <style>
@@ -45,6 +56,32 @@
   </style>
   <meta name="sb-url" content="{{ config.get('SUPABASE_URL','') if config else '' }}">
   <meta name="sb-key" content="{{ config.get('SUPABASE_KEY','') if config else '' }}">
+  <style>
+    /* Page transition */
+    .page-transition { opacity:0; transform:translateY(6px); transition:opacity .25s ease, transform .25s ease; }
+    .page-transition.ready { opacity:1; transform:translateY(0); }
+
+    /* Skeleton loader */
+    .skeleton { background:linear-gradient(90deg,var(--grey-2) 25%,var(--grey-3) 50%,var(--grey-2) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skeleton-line { height:14px; margin-bottom:10px; border-radius:4px; }
+    .skeleton-line.short { width:40%; }
+    .skeleton-line.medium { width:65%; }
+    .skeleton-line.full { width:100%; }
+    .skeleton-card { padding:20px; background:var(--grey-1); border:1px solid var(--grey-2); border-radius:10px; margin-bottom:12px; }
+
+    /* Button micro-animation */
+    .btn { transition:transform .1s ease, opacity .15s ease; }
+    .btn:active { transform:scale(.96); }
+
+    /* Install banner */
+    #install-banner { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--grey-1); border:1px solid var(--grey-3); border-radius:10px; padding:14px 20px; display:none; align-items:center; gap:14px; z-index:400; box-shadow:0 8px 32px rgba(0,0,0,.5); max-width:340px; width:90%; }
+    #install-banner.show { display:flex; animation:fadeUp .3s ease; }
+    .install-icon { font-size:1.6rem; flex-shrink:0; }
+    .install-text { font-size:.82rem; color:var(--grey-6); line-height:1.4; flex:1; }
+    .install-text strong { color:var(--white); display:block; margin-bottom:2px; }
+    .install-close { color:var(--grey-4); cursor:pointer; padding:4px; font-size:1rem; }
+  </style>
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -96,6 +133,17 @@
 </nav>
 
 <script src="{{ url_for('static', filename='js/sounds.js') }}"></script>
+
+<!-- PWA Install Banner -->
+<div id="install-banner">
+  <div class="install-icon">🎭</div>
+  <div class="install-text">
+    <strong>App installieren</strong>
+    Krimi Dinner zum Homescreen hinzufügen
+  </div>
+  <button class="install-close" onclick="dismissInstall()">✕</button>
+  <button class="btn btn-sm btn-primary" onclick="installApp()" style="flex-shrink:0;">Installieren</button>
+</div>
 
 <!-- Notification system (Realtime + polling fallback) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -195,5 +243,59 @@ setTimeout(initNotifRealtime, 2000);
 </script>
 
 {% block scripts %}{% endblock %}
+<script>
+// ── Service Worker ────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/static/sw.js')
+      .then(r => console.log('SW registered'))
+      .catch(e => console.warn('SW error:', e));
+  });
+}
+
+// ── Page transitions ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const main = document.querySelector('main, .main-content, [role="main"]');
+  if (main) {
+    main.classList.add('page-transition');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => main.classList.add('ready'));
+    });
+  }
+});
+
+// ── PWA Install Prompt ────────────────────────────────────────────────────
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show banner after 30s if not dismissed before
+  const dismissed = localStorage.getItem('install-dismissed');
+  if (!dismissed) {
+    setTimeout(() => {
+      document.getElementById('install-banner')?.classList.add('show');
+    }, 30000);
+  }
+});
+
+async function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-banner')?.classList.remove('show');
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner')?.classList.remove('show');
+  localStorage.setItem('install-dismissed', '1');
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner')?.classList.remove('show');
+  deferredPrompt = null;
+});
+</script>
 </body>
 </html>

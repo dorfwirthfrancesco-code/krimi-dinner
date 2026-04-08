@@ -13,12 +13,19 @@ LS_STORE_ID     = os.environ.get('LEMONSQUEEZY_STORE_ID', '339836')
 LS_WEBHOOK_SECRET = os.environ.get('LEMONSQUEEZY_WEBHOOK_SECRET', '')
 
 # Variant IDs for each scenario (set after creating products in LS dashboard)
+def _clean_id(v):
+    """Strip whitespace and quotes from env var values."""
+    v = v.strip()
+    if len(v) >= 2 and v[0] in ('"', "'") and v[-1] in ('"', "'"):
+        v = v[1:-1]
+    return v
+
 LS_VARIANTS = {
-    'venedig':   os.environ.get('LS_VARIANT_VENEDIG', ''),
-    'butler':    os.environ.get('LS_VARIANT_BUTLER', ''),
-    'noir':      os.environ.get('LS_VARIANT_NOIR', ''),
-    'dunkelberg': os.environ.get('LS_VARIANT_DUNKELBERG', ''),
-    'cocktails': os.environ.get('LS_VARIANT_COCKTAILS', ''),
+    'venedig':    _clean_id(os.environ.get('LS_VARIANT_VENEDIG', '')),
+    'butler':     _clean_id(os.environ.get('LS_VARIANT_BUTLER', '')),
+    'noir':       _clean_id(os.environ.get('LS_VARIANT_NOIR', '')),
+    'dunkelberg': _clean_id(os.environ.get('LS_VARIANT_DUNKELBERG', '')),
+    'cocktails':  _clean_id(os.environ.get('LS_VARIANT_COCKTAILS', '')),
 }
 
 def ls_headers():
@@ -67,6 +74,10 @@ def ls_create_checkout(variant_id, user_email, user_id, scenario):
         with urllib.request.urlopen(req, timeout=10) as r:
             data = json.loads(r.read())
             return data['data']['attributes']['url']
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        print(f'LS checkout HTTP error {e.code}: {body}')
+        return None
     except Exception as e:
         print(f'LS checkout error: {e}')
         return None
@@ -421,7 +432,7 @@ def debug_ls():
     return jsonify({
         'api_key_set': bool(LS_API_KEY),
         'store_id': LS_STORE_ID,
-        'variants': {k: bool(v) for k, v in LS_VARIANTS.items()},
+        'variants_cleaned': LS_VARIANTS,
         'variant_venedig_raw': repr(os.environ.get('LS_VARIANT_VENEDIG', 'NOT SET')),
     })
 
@@ -1373,6 +1384,29 @@ def api_game_players(code):
     players = [{'id': r['user_id'], 'name': player_names[r['user_id']]} for r in rows]
     return jsonify({'players': players})
 
+
+# ── Error handlers ────────────────────────────────────────────────────────────
+@app.errorhandler(404)
+def not_found(e):
+    lang = session.get('lang', 'en')
+    return render_template('404.html', t=get_t(lang), lang=lang,
+                           supported_langs=SUPPORTED_LANGS,
+                           config={'SUPABASE_URL': SB_URL, 'SUPABASE_KEY': SB_KEY}), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    lang = session.get('lang', 'en')
+    return render_template('500.html', t=get_t(lang), lang=lang,
+                           supported_langs=SUPPORTED_LANGS,
+                           config={'SUPABASE_URL': SB_URL, 'SUPABASE_KEY': SB_KEY}), 500
+
+@app.route('/offline')
+def offline():
+    return render_template('offline.html')
+
+@app.route('/static/sw.js')
+def sw():
+    return app.send_static_file('sw.js'), 200, {'Content-Type': 'application/javascript'}
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
