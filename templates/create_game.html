@@ -1,5 +1,14 @@
 {% extends "base.html" %}
-{% block title %}{{ t.create_title }} – Krimi Dinner{% endblock %}
+{% block title %}{{ t.create_title }} – Krimi Dinner<script>
+// Check if user owns Venedig
+fetch('/api/owned-scenarios').then(r=>r.json()).then(d=>{
+  if (d.scenarios && d.scenarios.includes('venedig')) {
+    document.getElementById('venedig-option').style.display = 'block';
+    document.getElementById('venedig-locked').style.display = 'none';
+  }
+}).catch(()=>{});
+</script>
+{% endblock %}
 {% block head %}
 <style>
   .scenario-option { display:none; }

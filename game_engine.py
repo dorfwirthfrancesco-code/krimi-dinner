@@ -6,7 +6,8 @@ KrimiDinner Game Engine v2
 """
 import random
 import json
-from scenarios.dunkelbach import SCENARIO
+from scenarios.dunkelbach import SCENARIO as DUNKELBACH_SCENARIO
+from scenarios.venedig import SCENARIO as VENEDIG_SCENARIO
 from scenarios.translations_dunkelbach import (
     ROLE_TRANSLATIONS, CLUE_TRANSLATIONS, TASK_TRANSLATIONS, ENDING_TRANSLATIONS
 )
@@ -44,7 +45,8 @@ def _apply_role_translation(role_key, role_data, lang):
         result['ability'] = orig_ab
     return result
 
-SCENARIOS = {"dunkelbach": SCENARIO}
+SCENARIOS = {"dunkelbach": DUNKELBACH_SCENARIO, "venedig": VENEDIG_SCENARIO}
+SCENARIO = DUNKELBACH_SCENARIO  # default for backwards compat
 
 def get_scenario(scenario_id):
     return SCENARIOS.get(scenario_id, SCENARIO)

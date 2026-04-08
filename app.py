@@ -416,11 +416,11 @@ def shop():
             owned.add(r['scenario'])
 
     items = [
-        {'id': 'venedig',    'name': 'Das Venedig-Komplott',  'genre': t['genre_classic'],    'players': '4–8',  'duration': '90 min',  'price': '4.99', 'tag': 'New'},
-        {'id': 'butler',     'name': 'Die Rache des Butlers', 'genre': t['genre_cozy'],       'players': '3–6',  'duration': '60 min',  'price': '2.99', 'tag': ''},
-        {'id': 'noir',       'name': 'Noir Downtown',         'genre': t['genre_hardboiled'], 'players': '4–8',  'duration': '90 min',  'price': '4.99', 'tag': ''},
-        {'id': 'dunkelberg', 'name': 'Schloss Dunkelberg',    'genre': t['genre_gothic'],     'players': '5–9',  'duration': '120 min', 'price': '5.99', 'tag': 'New'},
-        {'id': 'cocktails',  'name': 'Cocktails & Leichen',   'genre': t['genre_comedy'],     'players': '4–7',  'duration': '60 min',  'price': '2.99', 'tag': ''},
+        {'id': 'venedig',    'name': 'Die Maske des Verräters', 'genre': t['genre_classic'],    'players': '4–11', 'duration': '90–120 min', 'price': '4.99', 'tag': 'New'},
+        {'id': 'butler',     'name': 'Die Rache des Butlers',   'genre': t['genre_cozy'],       'players': '3–6',  'duration': '60 min',    'price': '2.99', 'tag': ''},
+        {'id': 'noir',       'name': 'Noir Downtown',           'genre': t['genre_hardboiled'], 'players': '4–8',  'duration': '90 min',    'price': '4.99', 'tag': ''},
+        {'id': 'dunkelberg', 'name': 'Schloss Dunkelberg',      'genre': t['genre_gothic'],     'players': '5–9',  'duration': '120 min',   'price': '5.99', 'tag': ''},
+        {'id': 'cocktails',  'name': 'Cocktails & Leichen',     'genre': t['genre_comedy'],     'players': '4–7',  'duration': '60 min',    'price': '2.99', 'tag': ''},
     ]
     for item in items:
         item['owned'] = item['id'] in owned
@@ -1384,6 +1384,18 @@ def api_game_players(code):
     players = [{'id': r['user_id'], 'name': player_names[r['user_id']]} for r in rows]
     return jsonify({'players': players})
 
+
+@app.route('/api/owned-scenarios')
+@login_required
+def api_owned_scenarios():
+    uid   = session.get('user_id')
+    token = session.get('access_token')
+    owned = ['dunkelbach']  # always free
+    if SB_OK and uid and uid != 'demo':
+        rows = sb_get('purchases', f'user_id=eq.{uid}&select=scenario', token) or []
+        for r in rows:
+            owned.append(r['scenario'])
+    return jsonify({'scenarios': owned})
 
 # ── Error handlers ────────────────────────────────────────────────────────────
 @app.errorhandler(404)
