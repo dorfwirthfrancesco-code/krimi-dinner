@@ -21,11 +21,8 @@ def _clean_id(v):
     return v
 
 LS_VARIANTS = {
-    'venedig':    _clean_id(os.environ.get('LS_VARIANT_VENEDIG', '')),
-    'butler':     _clean_id(os.environ.get('LS_VARIANT_BUTLER', '')),
-    'noir':       _clean_id(os.environ.get('LS_VARIANT_NOIR', '')),
-    'dunkelberg': _clean_id(os.environ.get('LS_VARIANT_DUNKELBERG', '')),
-    'cocktails':  _clean_id(os.environ.get('LS_VARIANT_COCKTAILS', '')),
+    'venedig': _clean_id(os.environ.get('LS_VARIANT_VENEDIG', '')),
+    'alpina':  _clean_id(os.environ.get('LS_VARIANT_ALPINA', '')),
 }
 
 def ls_headers():
@@ -416,11 +413,8 @@ def shop():
             owned.add(r['scenario'])
 
     items = [
-        {'id': 'venedig',    'name': 'Die Maske des Verräters', 'genre': t['genre_classic'],    'players': '4–11', 'duration': '90–120 min', 'price': '4.99', 'tag': 'New'},
-        {'id': 'butler',     'name': 'Die Rache des Butlers',   'genre': t['genre_cozy'],       'players': '3–6',  'duration': '60 min',    'price': '2.99', 'tag': ''},
-        {'id': 'noir',       'name': 'Noir Downtown',           'genre': t['genre_hardboiled'], 'players': '4–8',  'duration': '90 min',    'price': '4.99', 'tag': ''},
-        {'id': 'dunkelberg', 'name': 'Schloss Dunkelberg',      'genre': t['genre_gothic'],     'players': '5–9',  'duration': '120 min',   'price': '5.99', 'tag': ''},
-        {'id': 'cocktails',  'name': 'Cocktails & Leichen',     'genre': t['genre_comedy'],     'players': '4–7',  'duration': '60 min',    'price': '2.99', 'tag': ''},
+        {'id': 'venedig', 'name': 'Die Maske des Verräters', 'genre': t['genre_classic'],    'players': '4–11', 'duration': '90–120 min', 'price': '4.99', 'tag': 'New'},
+        {'id': 'alpina',  'name': 'Das Grand Hotel Alpina',  'genre': t['genre_classic'],    'players': '4–11', 'duration': '90–120 min', 'price': '4.99', 'tag': 'New'},
     ]
     for item in items:
         item['owned'] = item['id'] in owned
