@@ -953,9 +953,14 @@ def game_setup(code):
     if not player_ids:
         return redirect(url_for('lobby', code=code))
 
+    # Get scenario from lobby
+    lb_info = sb_get('lobbies', f'code=eq.{code}&select=scenario', token) or []
+    scenario_id = lb_info[0].get('scenario','dunkelbach') if lb_info else 'dunkelbach'
+    session['scenario_id'] = scenario_id
+
     # Assign roles — EVERYONE random including host
     from game_engine import assign_roles, get_role_card, get_initial_clues
-    assignments = assign_roles('dunkelbach', player_ids, lang)
+    assignments = assign_roles(scenario_id, player_ids, lang)
 
     # Create game session
     init_state = {
@@ -967,7 +972,7 @@ def game_setup(code):
     }
     gs = sb_post('game_sessions', {
         'lobby_id': lobby_id,
-        'scenario': 'dunkelbach',
+        'scenario': scenario_id,
         'phase':    1,
         'state':    json.dumps(init_state),
     }, token)
@@ -980,8 +985,8 @@ def game_setup(code):
 
     # Save each player's role
     for pid, assignment in assignments.items():
-        rc     = get_role_card(pid, assignments, 'dunkelbach', lang)
-        clues  = get_initial_clues(pid, assignments, 'dunkelbach', lang)
+        rc     = get_role_card(pid, assignments, scenario_id, lang)
+        clues  = get_initial_clues(pid, assignments, scenario_id, lang)
         sb_post('player_roles', {
             'game_id':        game_id,
             'user_id':        pid,
@@ -994,8 +999,9 @@ def game_setup(code):
 
     # Fire opening triggers
     gs_state = init_state.copy()
-    gs_state = fire_trigger('game_started_5min', game_id, gs_state, assignments, player_ids, lang, token)
-    gs_state = fire_trigger('first_10_minutes',  game_id, gs_state, assignments, player_ids, lang, token)
+    gs_state = fire_trigger('game_started_immediately', game_id, gs_state, assignments, player_ids, lang, token)
+    gs_state = fire_trigger('game_started_5min',       game_id, gs_state, assignments, player_ids, lang, token)
+    gs_state = fire_trigger('first_10_minutes',        game_id, gs_state, assignments, player_ids, lang, token)
 
     # Send welcome atmosphere
     send_event(game_id, 'atmosphere',
@@ -1023,9 +1029,11 @@ def game_play(code):
     role_card = json.loads(my_role[0]['role_card']) if my_role else None
     clues     = json.loads(my_role[0]['clues_received']) if my_role else []
 
-    gs = sb_get('game_sessions', f'id=eq.{game_id}&select=phase,state', token) or []
-    phase      = gs[0]['phase'] if gs else 1
-    game_state = json.loads(gs[0]['state']) if gs else {}
+    gs = sb_get('game_sessions', f'id=eq.{game_id}&select=phase,state,scenario', token) or []
+    phase       = gs[0]['phase'] if gs else 1
+    game_state  = json.loads(gs[0]['state']) if gs else {}
+    scenario_id = gs[0].get('scenario','dunkelbach') if gs else session.get('scenario_id','dunkelbach')
+    session['scenario_id'] = scenario_id
 
     # Host = player who created the lobby (not a special role)
     lb       = sb_get('lobbies', f'code=eq.{code}&select=host_id', token) or []
@@ -1047,6 +1055,7 @@ def game_play(code):
         game_state=game_state,
         is_baron=is_baron,
         ghost_active=ghost_active,
+        scenario_id=scenario_id,
         lang=lang)
 
 # ── Trigger: Baron dies ───────────────────────────────────────────────────────

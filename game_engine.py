@@ -262,18 +262,17 @@ def get_tasks_for_trigger(trigger, game_state, assignments, player_ids, scenario
         assigned_to = task.get("assigned_to", "random")
         recipients  = _resolve_recipients(assigned_to, task, game_state, assignments, player_ids)
 
-        for pid in recipients:
-            raw_instr = task.get("instruction", {})
+        raw_instr = task.get("instruction", {})
         if lang not in ("de","en") and task_id in TASK_TRANSLATIONS:
             instruction = TASK_TRANSLATIONS[task_id].get(lang, raw_instr.get("en", raw_instr.get("de","")))
         else:
             instruction = raw_instr.get(lang, raw_instr.get("en", raw_instr.get("de","")))
-            if not instruction:
-                continue
+        if not instruction:
+            continue
 
-            # Murderer-specific tasks get private flag
-            is_private = task.get("private", False) or "murderer" in task_id
+        is_private = task.get("private", False) or "murderer" in task_id
 
+        for pid in recipients:
             tasks_to_send.append({
                 "task_id":     task_id,
                 "recipient_id": pid,
