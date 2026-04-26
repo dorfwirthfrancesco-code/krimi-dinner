@@ -9,6 +9,7 @@ import json
 from scenarios.dunkelbach import SCENARIO as DUNKELBACH_SCENARIO
 from scenarios.venedig import SCENARIO as VENEDIG_SCENARIO
 from scenarios.alpina import SCENARIO as ALPINA_SCENARIO
+from scenarios.pitch import SCENARIO as PITCH_SCENARIO
 from scenarios.translations_dunkelbach import (
     ROLE_TRANSLATIONS, CLUE_TRANSLATIONS, TASK_TRANSLATIONS, ENDING_TRANSLATIONS
 )
@@ -46,7 +47,7 @@ def _apply_role_translation(role_key, role_data, lang):
         result['ability'] = orig_ab
     return result
 
-SCENARIOS = {"dunkelbach": DUNKELBACH_SCENARIO, "venedig": VENEDIG_SCENARIO, "alpina": ALPINA_SCENARIO}
+SCENARIOS = {"dunkelbach": DUNKELBACH_SCENARIO, "venedig": VENEDIG_SCENARIO, "alpina": ALPINA_SCENARIO, "pitch": PITCH_SCENARIO}
 SCENARIO = DUNKELBACH_SCENARIO  # default for backwards compat
 
 def get_scenario(scenario_id):
